@@ -1,9 +1,16 @@
-var data = [
-  {
-    x: ['giraffes', 'orangutans', 'monkeys'],
-    y: [20, 14, 23],
-    type: 'bar'
-  }
-];
+document.addEventListener("DOMContentLoaded", () => {
+    console.log("Page is ready!");
+    initializePlotly();
+});
 
-Plotly.newPlot('myDiv', data);
+function initializePlotly(){
+    var data = [
+    {
+        x: ['giraffes', 'orangutans', 'monkeys'],
+        y: [20, 14, 23],
+        type: 'bar'
+    }
+    ];
+
+    Plotly.newPlot('myDiv', data);
+}
