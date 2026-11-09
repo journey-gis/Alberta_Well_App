@@ -2,11 +2,44 @@
     <head>
     	<!-- Load plotly.js into the DOM -->
     	<script src='https://cdn.plot.ly/plotly-4.1.1.min.js'></script>
-        <script src="plotlytest.js" defer></script>
+
+        <!-- Link to the latest Leaflet stylesheet --> 
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" 
+        crossorigin=""/> 
+        
+        <!-- Link to the latest Leaflet JavaScript library -->  
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" 
+        crossorigin=""></script> 
+
+        <!-- Load my main code -->
+        <script src="plotlytest.js"></script>
+
+        <style>
+            * {box-sizing: border-box;}
+            body {font-family: Arial, Helvetica, sans-serif;}
+
+            footer {
+                grid-area: footer;
+                background-color: #f7ff85;
+                padding: 10px;
+                text-align: center;
+                color: rgb(0, 0, 0);
+            }
+        </style>
     </head>
 
   <body>
-    <h1> This is a test of implementing plotly on a website </h1>
-  	<div id='myDiv'><!-- Plotly chart will be drawn inside this DIV --></div>
+    <h1>Alberta Well Development App</h1>
+  	<div id='wellMap' style="height: 500px; width: 600px;"></div><!-- leaflet map to display inside this DIV --></div>
+    <div class="slidecontainer">
+        <input type="range" min="1949" max="2026" value="2026" class="slider" id="myRange">
+    </div>
+    <footer>
+        <p>Data Citation:</p>
+        <p>AI Acknowledgement: Micorosft Co-pilot used for code reference</p>
+        <p>Written by Keith Johnson, November 2026</p>
+    </footer>
   </body>
 </html>
