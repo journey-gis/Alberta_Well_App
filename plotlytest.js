@@ -1,3 +1,5 @@
+
+
 document.addEventListener("DOMContentLoaded", () => {
     console.log("Page is ready!");
     initializeMap();
@@ -12,7 +14,10 @@ function initializeMap(){
    			maxZoom: 20,
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy;<a href="https://carto.com/attributions">CARTO</a>' //put this attribution on one continuous line
 		}).addTo(map);//add the base tiles to the map object
-}
+
+    console.log("Map loaded!")
+    }
+
 
 function initializePlotly(){
     var data = [
@@ -24,4 +29,15 @@ function initializePlotly(){
     ];
 
     Plotly.newPlot('myDiv', data);
+}
+
+const slider = document.getElementById("yearRange");
+const year = document.getElementById("selectedYear")
+year.innerHTML=slider.value;
+console.log(slider.value);
+
+// Update the current slider value (each time you drag the slider handle)
+slider.oninput = function() {
+    console.log(this.value);
+    year.innerHTML = this.value;
 }
