@@ -13,6 +13,12 @@ var wells=""; //Global variable for holding loaded well data
 year.innerHTML=slider.value;
 console.log(slider.value);
 
+const wellIcon = L.icon({ 
+    iconUrl : 'wellsymbol.png', 
+    iconSize:[48,32] 
+});
+
+
 function initializeMap(){
     //Create the map object and set the centre point and zoom level
 
@@ -46,12 +52,14 @@ function initializePlotly(){
 
 function updateMarkers(){;
     markerLayer.clearLayers(); // Clear the current markerlayer
+    console.log("Updating markers.")
     for (let i=0; i<wells.length;i++){
         if(wells[i].Year<=slider.value){
-            let wellLocation = new L.LatLng(wells[i].BH_Latitude, wells[i].BH_Longitude); 
-            let marker = new L.Marker(wellLocation).addTo(markerLayer)
+            let wellLocation = new L.LatLng(wells[i].LATITUDE, wells[i].LONGITUDE); 
+            let marker = new L.Marker(wellLocation,{icon:wellIcon}).addTo(markerLayer)
         }
     }
+    console.log("> Updated.")
 }
 
 // Update the current slider value (each time you drag the slider handle)
@@ -65,18 +73,13 @@ areadropdown.addEventListener("change",function(event){
     area=event.target.value // get the area name for easy reference
     console.log("selected: ",area ); // Debugging code
     // The if else statements below control zooming, loading and calling update features.
-    if (area=="CAL"){
-        map.setView([51.0579, -114.0738], 8);
-    } 
-    else if (area=="EDM"){
-        map.setView([53.5372, -113.4995], 8);
-        wells=EdmontonWells();
+    if (area=="ELM"){
+        map.setView([54.8343, -118.5395], 8);
+        wells=elmworthwells();
     }
-    else if (area=="RMH"){
-        map.setView([52.3813, -114.9542], 8);
-    }
-    else if (area=="GP"){
-        map.setView([55.1628, -118.7839], 8);
+    else if (area=="PEM"){
+        map.setView([53.08919, -114.9765], 8);
+        wells=pembinawells();
     }
     else {
         map.setView([55.1499, -114.8228], 5);
