@@ -23,28 +23,42 @@
 
   <body>
 
-    <div class="sidenav">
+
+
+    <header>
+        <h1>Well Development</h1>
+        <h3>Alberta Over the Last Decade (2016-present)</h3>
+    </header>
+    <div class="dashboard">
+        <div class="side">
         <div class="slidecontainer">
             <label for="areaselect">Select Field to Examine</label>
             <select id="areaselect">
-                <option value="">Area</option>
+                <option value="">Area View</option>
                 <option value="ELM">Elmworth Field</option>
                 <option value="PEM">Pembina Field</option>
+                <option value="PRO">Provost Field</option>
             </select>
             <br><br>
             <label for="yearRange">Select Year (2016 - ??)</label>
             <input type="range" min="2016" max="2026" value="2016" class="slider" id="yearRange">
             <p>End Year: <span id="selectedYear"></span></p>
         </div>
+        </div>
+        <div id='wellMap'></div><!-- leaflet map to display inside this DIV -->
+        <div class="charts">
+            <div id='yearhist'></div>
+            <div id='depthhist'></div>
+        </div>
     </div>
-    <div class="main">
-        <h1>Well Development in Alberta Over the Last Decade (2016-present)</h1>
-  	    <div id='wellMap'></div><!-- leaflet map to display inside this DIV --></div>
-        <footer>
-            <p>Data Citation: openalberta.ca (Boundary), aer.ca (Wells)<br>
-            AI Acknowledgement: Microsoft Co-pilot used for code reference<br>
-            Keith Johnson, November 2026</p>
-        </footer>
+
+
+    </div>
+    <footer>
+        <p>Data Citation: openalberta.ca (Boundary), aer.ca (Wells)<br>
+        AI Acknowledgement: Microsoft Co-pilot used for code reference<br>
+        Keith Johnson, November 2026</p>
+    </footer>
     </div>
   </body>
 </html>

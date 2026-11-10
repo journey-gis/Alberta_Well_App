@@ -35,31 +35,99 @@ function initializeMap(){
             fillOpacity:0
         }
     }).addTo(map);
+
+    wellsperyear();
     console.log("Map loaded!");
+
 }
 
-function initializePlotly(){
-    var data = [
-    {
-        x: ['giraffes', 'orangutans', 'monkeys'],
-        y: [20, 14, 23],
-        type: 'bar'
+function wellsperyear(){
+    console.log("Building Charts")
+    if (wells.length<1){
+        wells=[];
     }
-    ];
 
-    Plotly.newPlot('myDiv', data);
+    const layout = {
+        title: {
+            text: "Wells Drilled Per Year"
+        },
+        xaxis: {
+            title: { text: "Year" },
+            dtick: 1,
+            automargin: true
+        },
+        yaxis: {
+            title: { text: "Well Count" },
+            rangemode: "tozero"
+        },
+        margin: {
+            l: 50,
+            r: 10,
+            t: 40,
+            b: 40
+        }
+    };
+
+    const layout2 = {
+        title: {
+            text: "Well Depth"
+        },
+        xaxis: {
+            title: { text: "Depth" },
+            dtick: 1000,
+            automargin: true,
+            type: "linear"
+        },
+        yaxis: {
+            title: { text: "Well Count" },
+            rangemode: "tozero"
+        },
+        margin: {
+            l: 50,
+            r: 10,
+            t: 40,
+            b: 40
+        }
+    };
+
+
+
+
+    const filteredWells = wells.filter(well => // Filter our well array showing only relevant wells.
+        well.Year >= 2016 && well.Year <= slider.value
+    );
+    const depths = filteredWells.map(well => Number(well.Final_Total_Depth));
+    console.log("Year Chart....")
+    console.log(depths)
+    Plotly.react('yearhist', [{
+        x:filteredWells.map(well => well.Year),
+        type:"histogram"
+    }],layout,{responsive: true});
+
+    console.log("Depth Chart....")
+    Plotly.react('depthhist', [{
+        x:depths,
+        type:"histogram",
+        xbins:{
+            size:500
+        }
+    }],layout2,{responsive: true});
+    console.log("Charts completed")
 }
 
 function updateMarkers(){;
     markerLayer.clearLayers(); // Clear the current markerlayer
+
+    const filteredWells = wells.filter(well =>  // Filter our well array showing only relevant wells.
+        well.Year >= 2016 && well.Year <= slider.value
+    );
     console.log("Updating markers.")
-    for (let i=0; i<wells.length;i++){
-        if(wells[i].Year<=slider.value){
-            let wellLocation = new L.LatLng(wells[i].LATITUDE, wells[i].LONGITUDE); 
+    for (let i=0; i<filteredWells.length;i++){
+            let wellLocation = new L.LatLng(filteredWells[i].LATITUDE, filteredWells[i].LONGITUDE); 
             let marker = new L.Marker(wellLocation,{icon:wellIcon}).addTo(markerLayer)
-        }
     }
     console.log("> Updated.")
+    wellsperyear();
 }
 
 // Update the current slider value (each time you drag the slider handle)
@@ -81,9 +149,14 @@ areadropdown.addEventListener("change",function(event){
         map.setView([53.08919, -114.9765], 8);
         wells=pembinawells();
     }
+    else if (area=="PRO"){
+        map.setView([52.1925, -111.1416], 8);
+        wells=provostwells();
+    }
     else {
         map.setView([55.1499, -114.8228], 5);
         wells="";
     }
+    wellsperyear();
     updateMarkers(wells);
 });
