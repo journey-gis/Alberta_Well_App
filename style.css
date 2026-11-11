@@ -4,12 +4,14 @@ body {font-family: Arial, Helvetica, sans-serif;}
 /* Header and footer styles */
 header {
   background-color: #f1f1f1;
-  padding: 10px;
+  background-image: url("well.png");
+  background-repeat: no-repeat;
+  background-size: contain;
+  padding: 5px;
   text-align: center;
 }
 
 footer {
-    grid-area: footer;
     background-color: hsl(0, 0%, 100%);
     padding: 10px;
     padding-top: 20px;
@@ -22,7 +24,8 @@ footer {
     display: grid;
     grid-template-columns: 220px 1.2fr 1fr;
     gap: 20px;
-    height: 600px;
+    height: 700px;
+
 }
 
 #wellMap{
@@ -35,21 +38,7 @@ footer {
 .charts {
     display: grid;
     grid-template-rows: 1fr 1fr;
-    min-height: 0;
-    min-width: 0;
-    overflow: hidden;
-}
-
-#yearhist, #depthhist{
-    height: 100%;
-    width: 100%;
-    min-height:0;
-
-}
-
-.sidelabel{
-    display: block;
-    font-weight: bold; 
+    height: auto;
 }
 
 /* Sidebar/left column */
@@ -57,6 +46,40 @@ footer {
   background-color: #cfcdac;
   padding: 10px;
   width: 220px;
+  
+}
+
+.sidelabel{
+    display: block;
+    font-weight: bold; 
+    font-size:medium;
+}
+.sidetext{
+    display: block;
+    font-size:small;
+}
+.sideDropdown{
+    width: 200px;
+}
+
+/* Button Styling */
+.sidebutton {
+  background-color: rgb(0, 119, 255);
+  border-radius: 5px;
+  color: white;
+  padding: 10px 10px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 12px;
+  cursor: pointer;
+  width: 100%;
+  transition-duration: 0.2s;
+}
+
+.sidebutton:hover {
+  background-color: #15cc2e; /* Green */
+  color: white;
 }
 
 /* Style page content */

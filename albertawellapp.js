@@ -13,6 +13,9 @@ const sliderend = document.getElementById("yearEnd");
 const yearstart = document.getElementById("selectedYearStart");
 const yearend = document.getElementById("selectedYearEnd");
 const symbolization = document.getElementById("symbolization");
+const controlpanel = document.getElementById("controlpanel");
+const legendpanel = document.getElementById("legend");
+const companyDropdown = document.getElementById("companyDropdown")
 
 // Set the text on the page to be the starting year values
 yearstart.innerHTML=sliderstart.value;
@@ -21,6 +24,7 @@ yearend.innerHTML=sliderend.value;
 const areadropdown = document.getElementById("areaselect");
 var wells=""; //Global variable for holding loaded well data
 var symbol="default"; //Global variable for holding selected symbology
+var filtcompany="Default";
 
 console.log(sliderend.value); // debug
 console.log(symbol)
@@ -66,7 +70,8 @@ function wellsperyear(){ // Function to update and render the two histograms (De
         },
         yaxis: {
             title: { text: "Well Count" },
-            rangemode: "tozero"
+            rangemode: "tozero",
+            automargin: true
         },
         margin: {
             l: 50,
@@ -97,10 +102,17 @@ function wellsperyear(){ // Function to update and render the two histograms (De
             b: 40
         }
     };
-
-    const filteredWells = wells.filter(well => // Filter our well array showing only relevant wells.
-        well.Year >= sliderstart.value && well.Year <= sliderend.value
-    );
+    console.log(filtcompany)
+    if (filtcompany=="Default"){
+        filteredWells = wells.filter(well =>  // Filter our well array showing only relevant wells.
+            well.Year >= sliderstart.value && well.Year <= sliderend.value
+        );
+    }
+    else{
+        filteredWells = wells.filter(well =>  // Filter our well array showing only relevant wells.
+            well.Year >= sliderstart.value && well.Year <= sliderend.value && well.Licensee==filtcompany
+        );
+    }
     const depths = filteredWells.map(well => Number(well.Final_Total_Depth));
 
     console.log("Year Chart....") // debug
@@ -123,17 +135,71 @@ function wellsperyear(){ // Function to update and render the two histograms (De
 function updateMarkers(){; // Function to update the well symbols as values are updates (Sliders, symbology)
     markerLayer.clearLayers(); // Clear the current markerlayer
 
-    const filteredWells = wells.filter(well =>  // Filter our well array showing only relevant wells.
-        well.Year >= sliderstart.value && well.Year <= sliderend.value
-    );
+    var filteredWells = wells.filter(well =>  // Filter our well array showing only relevant wells.
+        well.Year >= sliderstart.value && well.Year <= sliderend.value);
+    
+    if (filtcompany!="Default"){
+        filteredWells = filteredWells.filter(well =>  // Filter our well array showing only relevant wells.
+            well.Licensee==filtcompany);
+    }
+
     console.log("Updating markers.") // debug
     console.log(symbol) // debug
+       
+    symbolColours="";
+
+
     for (let i=0; i<filteredWells.length;i++){  // Step through the current wells and add them to the map.
             let wellLocation = new L.LatLng(filteredWells[i].LATITUDE, filteredWells[i].LONGITUDE); 
-            let marker = new L.Marker(wellLocation,{icon:wellIcon}).addTo(markerLayer)
+            //let marker = new L.Marker(wellLocation,{icon:wellIcon}).addTo(markerLayer)
+            if(symbol=="COMP"){
+                symbolColours=companyColour(); 
+                let marker = new L.circleMarker(wellLocation,{radius:5,fillColor:symbolColours[filteredWells[i].Licensee],color:'#000',weight:1,fillopacity:0.9}).addTo(markerLayer);
+                console.log(symbolColours[filteredWells[i].Licensee]);
+            }
+            else if (symbol=="LIC"){
+                symbolColours=licenseColour();
+                let marker = new L.circleMarker(wellLocation,{radius:5,fillColor:symbolColours[filteredWells[i].Licence_Status],color:'#000',weight:1,fillopacity:0.9}).addTo(markerLayer);
+                console.log(symbolColours[filteredWells[i].Licensee]);   
+            }
+            else
+            {
+                let marker = new L.circleMarker(wellLocation,{radius:5,fillColor:'#ebb104',color:'#000',weight:1,fillopacity:0.8}).addTo(markerLayer);
+            }
     }
     console.log("> Updated.") // debug
     wellsperyear(); // Update wells histograms
+    return filteredWells;
+}
+
+function companyColour() {
+    const companies = [...new Set(
+        wells.map(well => well.Licensee)
+    )].filter(Licensee => Licensee != null);  // Build a unqique list of companies within the area
+
+    const colours = {}; // Set up an empty dictionary to store the generated colours
+    console.log(companies) // debug
+    companies.sort().forEach((Licensee, index) => {
+        const hue = (index * 137.508) % 360;
+        colours[Licensee] = `hsl(${hue}, 65%, 45%)`;
+    });
+    console.log(colours)
+    return colours;
+}
+
+function licenseColour() {
+    const licenses = [...new Set(
+        wells.map(well => well.Licence_Status)
+    )].filter(Licence_Status => Licence_Status != null);  // Build a unqique list of companies within the area
+
+    const colours = {}; // Set up an empty dictionary to store the generated colours
+    console.log(licenses) // debug
+    licenses.sort().forEach((Licence_Status, index) => {
+        const hue = (index * 137.508) % 360;
+        colours[Licence_Status] = `hsl(${hue}, 65%, 45%)`;
+    });
+    console.log(colours)
+    return colours;
 }
 
 // Update the current slider value (each time you drag the slider handle)
@@ -145,7 +211,8 @@ sliderstart.oninput = function () {
         sliderend.value=this.value;
         yearend.innerHTML = this.value;
     }
-    updateMarkers(); // Update the markers on the map
+    filteredwells=updateMarkers(); // Update the markers on the map
+    updateCompanyDropdown(filteredwells);
 }
 
 // Update the current slider value (each time you drag the slider handle)
@@ -157,15 +224,18 @@ sliderend.oninput = function () {
         sliderstart.value=this.value;
         yearstart.innerHTML = this.value;
     }
-    updateMarkers(); // Update the markers on the map
+    filteredwells=updateMarkers(); // Update the markers on the map
+    updateCompanyDropdown(filteredwells);
 }
 
+
+// Event listeners
 areadropdown.addEventListener("change",function(event){
     area=event.target.value // get the area name for easy reference
     console.log("selected: ",area ); // Debugging code
     // The if else statements below control zooming, loading and calling update features.
     if (area=="ELM"){
-        map.setView([54.8343, -118.5395], 8);
+        map.setView([55.0088, -119.2125], 9);
         wells=elmworthwells();
     }
     else if (area=="PEM"){
@@ -192,11 +262,57 @@ areadropdown.addEventListener("change",function(event){
         map.setView([55.1499, -114.8228], 5);
         wells="";
     }
-    wellsperyear();
-    updateMarkers();
+
+    if (wells==""){ // Checks to see if there is an active area.
+        resetCompanyDropdown() // No active wells, reset the company dropdown
+        markerLayer.clearLayers(); // Clear the current markerlayer
+    } else {
+        filteredwells=updateMarkers(); // Active wells, update the markers to reflect these
+        updateCompanyDropdown(filteredwells); // Update the company dropdown.
+    }
 });
 
 symbolization.addEventListener("change",function(event){
     symbol=event.target.value;
-    updateMarkers()    
+    updateMarkers();  
 });
+
+companyDropdown.addEventListener("change",function(event){
+    filtcompany=event.target.value;
+    updateMarkers(); 
+});
+
+function resetCompanyDropdown(){
+    console.log("Resetting Company Dropdown")
+    companyDropdown.length=1; // Clear the dropdown
+}
+
+function updateCompanyDropdown(filteredwells){
+    companyDropdown.length=1; // Clear the dropdown
+    const companies = [...new Set(
+        filteredWells.map(well => well.Licensee)
+    )].filter(Licensee => Licensee != null);  // Build a unqique list of companies within the area
+
+    console.log("Companies")
+    console.log(companies)
+
+    companies.forEach(company => {
+        console.log("Adding: " + company)
+        const option = document.createElement('option');
+        option.value=company;
+        option.textContent=company;
+        companyDropdown.appendChild(option);
+    });
+
+};
+
+
+// These handle the hide/show controls for the sidebar
+
+document.getElementById("btnHideControls").addEventListener("click", () => {
+    controlpanel.hidden = !controlpanel.hidden;
+});
+document.getElementById("btnHideLegend").addEventListener("click", () => {
+    legendpanel.hidden = !legendpanel.hidden;
+});
+

@@ -1,7 +1,8 @@
 <html>
     <head>
-    	<!-- Load plotly.js into the DOM -->
+    	<!-- Load plotly and jquery into the DOM -->
     	<script src='https://cdn.plot.ly/plotly-4.1.1.min.js'></script>
+        <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
         <!-- Link to the latest Leaflet stylesheet --> 
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
@@ -22,59 +23,69 @@
     </head>
 
   <body>
-
-
-
     <header>
         <h1>Well Development</h1>
         <h3>Selected Alberta Fields Over the Last Decade (2016-present)</h3>
     </header>
     <div class="dashboard">
         <div class="side">
-        <div class="slidecontainer">
-            <label class="sidelabel" for="areaselect">Select Field to Examine</label><br>
-            <select id="areaselect">
-                <option value="">Area View</option>
-                <option value="ELM">Elmworth Field</option>
-                <option value="PEM">Pembina Field</option>
-                <option value="PRO">Provost Field</option>
-                <option value="SNC">Sinclair Field</option>
-                <option value="KAYS">Kaybob South Field</option>
-                <option value="MED">Medicine Hat Field</option>
-            </select>
-            <br><br>
-            <hr>
-            <label class="sidelabel" for="yearRange">Select Year Range</label>
-            <p>Start Year: <span id="selectedYearStart"></span></p>
-            <input type="range" min="2016" max="2026" value="2016" class="slider" id="yearStart">
-            <p>End Year: <span id="selectedYearEnd"></span></p> 
-            <input type="range" min="2016" max="2026" value="2016" class="slider" id="yearEnd">
+            <button class="sidebutton" id="btnHideControls">Hide/Show Filters</button><br><br>
+            <div class="slidecontainer" id="controlpanel">
+                <label class="sidelabel" for="areaselect">Select Field to Examine</label><br>
+                <select class="sideDropdown" id="areaselect">
+                    <option value="">Area View</option>
+                    <option value="ELM">Elmworth Field</option>
+                    <option value="PEM">Pembina Field</option>
+                    <option value="PRO">Provost Field</option>
+                    <option value="SNC">Sinclair Field</option>
+                    <option value="KAYS">Kaybob South Field</option>
+                    <option value="MED">Medicine Hat Field</option>
+                </select>
+                <br><br>
+                <hr>
+                <label class="sidelabel" for="yearRange">Select Year Range</label>
+                <p class="sidetext">Start Year: <span id="selectedYearStart"></span></p>
+                <input type="range" min="2016" max="2026" value="2016" class="slider" id="yearStart">
+                <p class="sidetext">End Year: <span id="selectedYearEnd"></span></p> 
+                <input type="range" min="2016" max="2026" value="2016" class="slider" id="yearEnd">
+                <br>
+                <hr>
+                <label class="sidelabel" for="symbolization">Colour based on</label><br>
+                <select class="sideDropdown" id="symbolization">
+                    <option value="">Default</option>
+                    <option value="COMP">Company</option>
+                    <option value="LIC">License Status</option>
+                    <option value="DEP">Depth</option>
+                </select>
+                <br>
+                <hr>
+                <label class="sidelabel" for="companyDropdown">Filter to Company</label><br>
+                <select class="sideDropdown" id="companyDropdown">
+                    <option value="Default">Default</option>
+                </select>
+                <hr>
+            </div>
             <br>
-            <hr>
-            <label class="sidelabel" for="symbolization">Colour based on</label><br>
-            <select id="symbolization">
-                <option value="">Default</option>
-                <option value="COMP">Company</option>
-                <option value="LIC">License Status</option>
-                <option value="DEP">Depth</option>
-            </select>
-        
-        </div>
-        </div>
-        <div id='wellMap'></div><!-- leaflet map to display inside this DIV -->
-        <div class="charts">
-            <div id='yearhist'></div>
-            <div id='depthhist'></div>
-        </div>
-    </div>
+            <button class="sidebutton" id="btnHideLegend"> Hide/Show legend </button>
+            <div id="legend">
+                <h4 class="sidelabel">Legend</h4>
+                <svg height="100" width="90%">
+                    <line x1="10" y1="10" x2="10" y2="40"></line>
+                </svg>
+            </div> 
 
-
+            </div>
+            <div id='wellMap'></div><!-- leaflet map to display inside this DIV -->
+            <div class="charts">
+                <div id='yearhist'></div>
+                <div id='depthhist'></div>
+            </div>
+        </div>
     </div>
     <footer>
-        <p>Data Citation: openalberta.ca (Boundary), aer.ca (Wells)<br>
+        <p>Data Citation: openalberta.ca (Boundary), aer.ca (Wells), pixabay (graphics)<br>
         AI Acknowledgement: Microsoft Co-pilot used for code reference<br>
         Keith Johnson, November 2026</p>
     </footer>
-    </div>
   </body>
 </html>
