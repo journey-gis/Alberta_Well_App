@@ -47,6 +47,11 @@ footer {
 
 }
 
+.sidelabel{
+    display: block;
+    font-weight: bold; 
+}
+
 /* Sidebar/left column */
 .side {
   background-color: #cfcdac;

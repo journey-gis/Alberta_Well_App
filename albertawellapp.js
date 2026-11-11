@@ -12,6 +12,7 @@ const sliderstart =document.getElementById("yearStart");
 const sliderend = document.getElementById("yearEnd");
 const yearstart = document.getElementById("selectedYearStart");
 const yearend = document.getElementById("selectedYearEnd");
+const symbolization = document.getElementById("symbolization");
 
 // Set the text on the page to be the starting year values
 yearstart.innerHTML=sliderstart.value;
@@ -19,8 +20,10 @@ yearend.innerHTML=sliderend.value;
 
 const areadropdown = document.getElementById("areaselect");
 var wells=""; //Global variable for holding loaded well data
+var symbol="default"; //Global variable for holding selected symbology
 
 console.log(sliderend.value); // debug
+console.log(symbol)
  
 const wellIcon = L.icon({ // Well Icon
     iconUrl : 'wellsymbol.png', 
@@ -101,7 +104,6 @@ function wellsperyear(){ // Function to update and render the two histograms (De
     const depths = filteredWells.map(well => Number(well.Final_Total_Depth));
 
     console.log("Year Chart....") // debug
-    console.log(depths) // debug
     Plotly.react('yearhist', [{
         x:filteredWells.map(well => well.Year),
         type:"histogram"
@@ -125,6 +127,7 @@ function updateMarkers(){; // Function to update the well symbols as values are 
         well.Year >= sliderstart.value && well.Year <= sliderend.value
     );
     console.log("Updating markers.") // debug
+    console.log(symbol) // debug
     for (let i=0; i<filteredWells.length;i++){  // Step through the current wells and add them to the map.
             let wellLocation = new L.LatLng(filteredWells[i].LATITUDE, filteredWells[i].LONGITUDE); 
             let marker = new L.Marker(wellLocation,{icon:wellIcon}).addTo(markerLayer)
@@ -173,10 +176,27 @@ areadropdown.addEventListener("change",function(event){
         map.setView([52.1925, -111.1416], 8);
         wells=provostwells();
     }
+    else if (area=="SNC"){
+        map.setView([55.3374, -119.8364], 8);
+        wells=sinclairwells();
+    }
+    else if (area=="MED"){
+        map.setView([50.1029, -110.4215], 8);
+        wells=medhatwells();
+    }  
+    else if (area=="KAYS"){
+        map.setView([54.2234, -116.8973], 9);
+        wells=kaybobswells();
+    }  
     else {
         map.setView([55.1499, -114.8228], 5);
         wells="";
     }
     wellsperyear();
-    updateMarkers(wells);
+    updateMarkers();
+});
+
+symbolization.addEventListener("change",function(event){
+    symbol=event.target.value;
+    updateMarkers()    
 });
