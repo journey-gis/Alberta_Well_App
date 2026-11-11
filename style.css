@@ -15,8 +15,12 @@ footer {
     background-color: hsl(0, 0%, 100%);
     padding: 10px;
     padding-top: 20px;
-    text-align: center;
     color: rgb(0, 0, 0);
+}
+
+.footertext{
+    text-align: center;
+    font-size: xx-small;
 }
 
 /* the main content columns */
