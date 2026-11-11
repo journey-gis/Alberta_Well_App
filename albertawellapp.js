@@ -6,12 +6,22 @@ document.addEventListener("DOMContentLoaded", () => {
 const map = L.map('wellMap'); //Create the global map object
 const markerLayer = L.layerGroup().addTo(map); // Add a grouplayer we can add and remove markers from.
 
-const slider = document.getElementById("yearRange");
-const year = document.getElementById("selectedYear");
+// Set up the initial code to identify and set the year range sliders
+// Get the objects and store them as variables
+const sliderstart =document.getElementById("yearStart");
+const sliderend = document.getElementById("yearEnd");
+const yearstart = document.getElementById("selectedYearStart");
+const yearend = document.getElementById("selectedYearEnd");
+
+// Set the text on the page to be the starting year values
+yearstart.innerHTML=sliderstart.value;
+yearend.innerHTML=sliderend.value;
+
 const areadropdown = document.getElementById("areaselect");
 var wells=""; //Global variable for holding loaded well data
-year.innerHTML=slider.value;
-console.log(slider.value);
+
+
+console.log(sliderend.value);
 
 const wellIcon = L.icon({ 
     iconUrl : 'wellsymbol.png', 
@@ -90,13 +100,11 @@ function wellsperyear(){
         }
     };
 
-
-
-
     const filteredWells = wells.filter(well => // Filter our well array showing only relevant wells.
-        well.Year >= 2016 && well.Year <= slider.value
+        well.Year >= sliderstart.value && well.Year <= sliderend.value
     );
     const depths = filteredWells.map(well => Number(well.Final_Total_Depth));
+
     console.log("Year Chart....")
     console.log(depths)
     Plotly.react('yearhist', [{
@@ -119,7 +127,7 @@ function updateMarkers(){;
     markerLayer.clearLayers(); // Clear the current markerlayer
 
     const filteredWells = wells.filter(well =>  // Filter our well array showing only relevant wells.
-        well.Year >= 2016 && well.Year <= slider.value
+        well.Year >= sliderstart.value && well.Year <= sliderend.value
     );
     console.log("Updating markers.")
     for (let i=0; i<filteredWells.length;i++){
@@ -130,11 +138,29 @@ function updateMarkers(){;
     wellsperyear();
 }
 
+
 // Update the current slider value (each time you drag the slider handle)
-slider.oninput = function () {
+sliderstart.oninput = function () {
     console.log(this.value);
-    year.innerHTML = this.value;
-    updateMarkers();
+    yearstart.innerHTML = this.value; // Set the text on the webpage to the current value
+    end=sliderend.value; // Get the current value of the end slider
+    if(end<this.value){ // Check and make sure the start slider is always smaller or equal to the end
+        sliderend.value=this.value;
+        yearend.innerHTML = this.value;
+    }
+    updateMarkers(); // Update the markers on the map
+}
+
+// Update the current slider value (each time you drag the slider handle)
+sliderend.oninput = function () {
+    console.log(this.value);
+    yearend.innerHTML = this.value; // Set the text on the webpage to the current value
+    start=sliderstart.value; // Get the current value of the start slider
+    if(start>this.value){ // Check and make sure the end slider is always larger or equal to the start
+        sliderstart.value=this.value;
+        yearstart.innerHTML = this.value;
+    }
+    updateMarkers(); // Update the markers on the map
 }
 
 areadropdown.addEventListener("change",function(event){

@@ -40,9 +40,12 @@
                 <option value="PRO">Provost Field</option>
             </select>
             <br><br>
-            <label for="yearRange">Select Year (2016 - ??)</label>
-            <input type="range" min="2016" max="2026" value="2016" class="slider" id="yearRange">
-            <p>End Year: <span id="selectedYear"></span></p>
+            <label for="yearRange">Select Year Range</label>
+            <p>Start Year: <span id="selectedYearStart"></span></p>
+            <input type="range" min="2016" max="2026" value="2016" class="slider" id="yearStart">
+            <p>End Year: <span id="selectedYearEnd"></span></p> 
+            <input type="range" min="2016" max="2026" value="2016" class="slider" id="yearEnd">
+        
         </div>
         </div>
         <div id='wellMap'></div><!-- leaflet map to display inside this DIV -->
