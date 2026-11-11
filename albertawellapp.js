@@ -279,7 +279,12 @@ areadropdown.addEventListener("change",function(event){
 
 symbolization.addEventListener("change",function(event){
     symbol=event.target.value;
-    updateMarkers();  
+    updateMarkers();
+    if (symbol!=="default"){
+        legend.addTo(map);
+    }  else {
+        legend.remove();
+    }
 });
 
 companyDropdown.addEventListener("change",function(event){
@@ -317,7 +322,22 @@ function updateCompanyDropdown(filteredwells){
 document.getElementById("btnHideControls").addEventListener("click", () => {
     controlpanel.hidden = !controlpanel.hidden;
 });
-document.getElementById("btnHideLegend").addEventListener("click", () => {
-    legendpanel.hidden = !legendpanel.hidden;
+
+
+const legend=L.control({
+    position: 'bottomright'
 });
+
+legend.onAdd = function(map) {
+    const div = L.DomUtil.create('div', 'info');
+    if (symbol=="COMP"){
+        div.innerHTML = '<h4>Companies</h4>';
+    } else if (symbol=="LIC"){
+        div.innerHTML = '<h4>License</h4>';
+    } else {
+        div.innerHTML = '<h4>Select Colour by</h4>';
+    }
+  
+    return div;
+};
 
