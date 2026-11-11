@@ -232,6 +232,7 @@ sliderend.oninput = function () {
 // Event listeners
 areadropdown.addEventListener("change",function(event){
     area=event.target.value // get the area name for easy reference
+    filtcompany="Default"
     console.log("selected: ",area ); // Debugging code
     // The if else statements below control zooming, loading and calling update features.
     if (area=="ELM"){
