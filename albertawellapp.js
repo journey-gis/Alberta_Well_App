@@ -259,6 +259,10 @@ areadropdown.addEventListener("change",function(event){
         map.setView([54.2234, -116.8973], 9);
         wells=kaybobswells();
     }  
+    else if (area=="KIRB"){
+        map.setView([55.3133, -110.8990], 9);
+        wells=kirbywells();
+    }  
     else {
         map.setView([55.1499, -114.8228], 5);
         wells="";
