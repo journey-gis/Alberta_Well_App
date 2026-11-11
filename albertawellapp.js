@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-    console.log("Page is ready!");
+    console.log("Page is ready!"); // debug
     initializeMap();
 });
 
@@ -20,18 +20,14 @@ yearend.innerHTML=sliderend.value;
 const areadropdown = document.getElementById("areaselect");
 var wells=""; //Global variable for holding loaded well data
 
-
-console.log(sliderend.value);
-
-const wellIcon = L.icon({ 
+console.log(sliderend.value); // debug
+ 
+const wellIcon = L.icon({ // Well Icon
     iconUrl : 'wellsymbol.png', 
     iconSize:[48,32] 
 });
 
-
-function initializeMap(){
-    //Create the map object and set the centre point and zoom level
-
+function initializeMap(){     //Create the map object and set the centre point and zoom level
     map.setView([55.1499, -114.8228], 5);
     //Load tiles from OpenStreetMap
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?key=cb1_43h0_1_711e31b181a9ac70ace470cb', {
@@ -46,13 +42,12 @@ function initializeMap(){
         }
     }).addTo(map);
 
-    wellsperyear();
-    console.log("Map loaded!");
-
+    wellsperyear(); // Update the histograms
+    console.log("Map loaded!"); // debug
 }
 
-function wellsperyear(){
-    console.log("Building Charts")
+function wellsperyear(){ // Function to update and render the two histograms (Depth and years)
+    console.log("Building Charts") // debug
     if (wells.length<1){
         wells=[];
     }
@@ -105,14 +100,14 @@ function wellsperyear(){
     );
     const depths = filteredWells.map(well => Number(well.Final_Total_Depth));
 
-    console.log("Year Chart....")
-    console.log(depths)
+    console.log("Year Chart....") // debug
+    console.log(depths) // debug
     Plotly.react('yearhist', [{
         x:filteredWells.map(well => well.Year),
         type:"histogram"
     }],layout,{responsive: true});
 
-    console.log("Depth Chart....")
+    console.log("Depth Chart....") // debug
     Plotly.react('depthhist', [{
         x:depths,
         type:"histogram",
@@ -120,28 +115,27 @@ function wellsperyear(){
             size:500
         }
     }],layout2,{responsive: true});
-    console.log("Charts completed")
+    console.log("Charts completed") // debug
 }
 
-function updateMarkers(){;
+function updateMarkers(){; // Function to update the well symbols as values are updates (Sliders, symbology)
     markerLayer.clearLayers(); // Clear the current markerlayer
 
     const filteredWells = wells.filter(well =>  // Filter our well array showing only relevant wells.
         well.Year >= sliderstart.value && well.Year <= sliderend.value
     );
-    console.log("Updating markers.")
-    for (let i=0; i<filteredWells.length;i++){
+    console.log("Updating markers.") // debug
+    for (let i=0; i<filteredWells.length;i++){  // Step through the current wells and add them to the map.
             let wellLocation = new L.LatLng(filteredWells[i].LATITUDE, filteredWells[i].LONGITUDE); 
             let marker = new L.Marker(wellLocation,{icon:wellIcon}).addTo(markerLayer)
     }
-    console.log("> Updated.")
-    wellsperyear();
+    console.log("> Updated.") // debug
+    wellsperyear(); // Update wells histograms
 }
-
 
 // Update the current slider value (each time you drag the slider handle)
 sliderstart.oninput = function () {
-    console.log(this.value);
+    console.log(this.value); // debug
     yearstart.innerHTML = this.value; // Set the text on the webpage to the current value
     end=sliderend.value; // Get the current value of the end slider
     if(end<this.value){ // Check and make sure the start slider is always smaller or equal to the end
@@ -153,7 +147,7 @@ sliderstart.oninput = function () {
 
 // Update the current slider value (each time you drag the slider handle)
 sliderend.oninput = function () {
-    console.log(this.value);
+    console.log(this.value); // debug
     yearend.innerHTML = this.value; // Set the text on the webpage to the current value
     start=sliderstart.value; // Get the current value of the start slider
     if(start>this.value){ // Check and make sure the end slider is always larger or equal to the start
