@@ -88,16 +88,36 @@ footer {
 
 /* Legend content */
 
-.info{
-    padding: 10px;
-    background: white;
-    font-size: medium;
-    border-radius: 5px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.2);
-    width:200px;
+.legend-item{
+	padding:1px;
 }
 
+.legend-patch{
+    padding: 10px;
+	padding-top:1px;
+	padding-bottom:1px;
+ 	width:15px;
+	height:15px;
+	border-radius:16px;
 
+}
+.legend-label{
+	padding-left:10px;
+    font-size: small;
+}
+
+.info{
+    padding-top:1px;
+    padding-left:10px;
+    padding-right:10px;
+    padding-bottom:10px;
+    background: white;
+    font-size: small;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    width:auto;
+    height:auto;
+}
 
 /* Style page content */
 .main {
