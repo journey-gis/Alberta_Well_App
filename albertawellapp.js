@@ -216,11 +216,11 @@ function assignColours(entity,max,label){
         entitycolours[sorted[i][label]]=entcolours[i]
         legenddata.push({label:sorted[i][label]+" ("+sorted[i]["count"]+")",colour:entcolours[i]});
     } else { // all remaining entries get other and grey
-        entitycolours[sorted[i][label]]=`hsl(0, 0, 50%)`
+        entitycolours[sorted[i][label]]='#808080'
     }
     }
     if (otherentry==1){
-        legenddata.push({label:"Other",colour:`hsl(0, 0%, 50%)`});
+        legenddata.push({label:"Other",colour:'#808080'});
     }
     //console.log(entitycolours)
     return [entitycolours,legenddata];
