@@ -1,3 +1,9 @@
+// Alberta Well Development Web App
+// Web app developed to investigate the freely available well data provided by the AER in Alberta Canada
+// 
+// Written by Keith Johnson
+// November 2026
+
 document.addEventListener("DOMContentLoaded", () => {
     console.log("Page is ready!"); // debug
     initializeMap();
@@ -14,13 +20,8 @@ const yearstart = document.getElementById("selectedYearStart");
 const yearend = document.getElementById("selectedYearEnd");
 
 // Get the object IDs for the filters
-
 const symbolization = document.getElementById("symbolization");
 const companyDropdown = document.getElementById("companyDropdown")
-
-// Set the text on the page to be the starting year values
-yearstart.innerHTML=sliderstart.value;
-yearend.innerHTML=sliderend.value;
 
 const areadropdown = document.getElementById("areaselect");
 let wells=""; //Global variable for holding loaded well data
@@ -39,6 +40,9 @@ function initializeMap(){     //Create the map object and set the centre point a
             fillOpacity:0
         }
     }).addTo(map);
+    // Set the text on the page to be the starting year values
+    yearstart.innerHTML=sliderstart.value;
+    yearend.innerHTML=sliderend.value;
 
     wellsperyear(); // Update the histograms
     console.log("Map loaded!"); // debug
@@ -251,6 +255,22 @@ sliderend.oninput = function () {
     updateCompanyDropdown();
     updateMarkers();
 }
+function getwellCentre(wells){
+    console.log("===Getting Well Centre===")
+    let latsum=0
+    let longsum=0
+    if (wells.length>0){
+        for (const well of wells){
+            latsum+=well.LATITUDE;
+            longsum+=well.LONGITUDE;
+        }
+        let latavg=latsum/wells.length
+        let longavg=longsum/wells.length
+        map.setView([latavg, longavg], 8);
+    } else {
+        map.setView([55.1499, -114.8228], 5);
+    }
+}
 
 // Event listeners
 areadropdown.addEventListener("change",function(event){  // Runs when the area drop down changes
@@ -260,38 +280,30 @@ areadropdown.addEventListener("change",function(event){  // Runs when the area d
     console.log("selected: ",area ); // Debugging code
     // The if else statements below control zooming, loading and calling update features.
     if (area=="ELM"){
-        map.setView([55.0088, -119.2125], 9);
         wells=elmworthwells();
     }
     else if (area=="PEM"){
-        map.setView([53.08919, -114.9765], 8);
         wells=pembinawells();
     }
     else if (area=="PRO"){
-        map.setView([52.1925, -111.1416], 8);
         wells=provostwells();
     }
     else if (area=="SNC"){
-        map.setView([55.3374, -119.8364], 8);
         wells=sinclairwells();
     }
     else if (area=="MED"){
-        map.setView([50.1029, -110.4215], 8);
         wells=medhatwells();
     }  
     else if (area=="KAYS"){
-        map.setView([54.2234, -116.8973], 9);
         wells=kaybobswells();
     }  
     else if (area=="KIRB"){
-        map.setView([55.3133, -110.8990], 9);
         wells=kirbywells();
     }  
     else {
-        map.setView([55.1499, -114.8228], 5);
         wells="";
     }
-
+    getwellCentre(wells);
     if (wells==""){ // Checks to see if there is an active area.
         resetCompanyDropdown() // No active wells, reset the company dropdown
         markerLayer.clearLayers(); // Clear the current markerlayer
