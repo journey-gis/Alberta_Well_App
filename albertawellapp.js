@@ -12,9 +12,10 @@ const sliderstart =document.getElementById("yearStart");
 const sliderend = document.getElementById("yearEnd");
 const yearstart = document.getElementById("selectedYearStart");
 const yearend = document.getElementById("selectedYearEnd");
+
+// Get the object IDs for the filters
+
 const symbolization = document.getElementById("symbolization");
-const controlpanel = document.getElementById("controlpanel");
-const legendpanel = document.getElementById("legend");
 const companyDropdown = document.getElementById("companyDropdown")
 
 // Set the text on the page to be the starting year values
@@ -22,17 +23,7 @@ yearstart.innerHTML=sliderstart.value;
 yearend.innerHTML=sliderend.value;
 
 const areadropdown = document.getElementById("areaselect");
-var wells=""; //Global variable for holding loaded well data
-var symbol="default"; //Global variable for holding selected symbology
-var filtcompany="Default";
-
-console.log(sliderend.value); // debug
-console.log(symbol)
- 
-const wellIcon = L.icon({ // Well Icon
-    iconUrl : 'wellsymbol.png', 
-    iconSize:[48,32] 
-});
+let wells=""; //Global variable for holding loaded well data
 
 function initializeMap(){     //Create the map object and set the centre point and zoom level
     map.setView([55.1499, -114.8228], 5);
@@ -54,7 +45,7 @@ function initializeMap(){     //Create the map object and set the centre point a
 }
 
 function wellsperyear(){ // Function to update and render the two histograms (Depth and years)
-    console.log("Building Charts") // debug
+    console.log("===Building Charts===") // debug
     if (wells.length<1){
         wells=[];
     }
@@ -102,22 +93,13 @@ function wellsperyear(){ // Function to update and render the two histograms (De
             b: 40
         }
     };
-    console.log(filtcompany)
-    if (filtcompany=="Default"){
-        filteredWells = wells.filter(well =>  // Filter our well array showing only relevant wells.
-            well.Year >= sliderstart.value && well.Year <= sliderend.value
-        );
-    }
-    else{
-        filteredWells = wells.filter(well =>  // Filter our well array showing only relevant wells.
-            well.Year >= sliderstart.value && well.Year <= sliderend.value && well.Licensee==filtcompany
-        );
-    }
-    const depths = filteredWells.map(well => Number(well.Final_Total_Depth));
 
+    let filtwells=filterWells();
+    const depths = filtwells.map(well => Number(well.Final_Total_Depth));
+    
     console.log("Year Chart....") // debug
     Plotly.react('yearhist', [{
-        x:filteredWells.map(well => well.Year),
+        x:filtwells.map(well => well.Year),
         type:"histogram"
     }],layout,{responsive: true});
 
@@ -132,49 +114,63 @@ function wellsperyear(){ // Function to update and render the two histograms (De
     console.log("Charts completed") // debug
 }
 
+function filterWells(){
+    console.log("===Filterwells===")  
+    // console.log("Filtering "+sliderstart.value+" to "+sliderend.value) //debug code
+    // console.log("Filtering "+ filtcompany) //debug code
+    let filtwells="";
+    filtwells = wells.filter(well =>  // Filter our well array showing only relevant wells.
+        well.Year >= sliderstart.value && well.Year <= sliderend.value);
+
+    if (companyDropdown.value!="Default"){
+        filtwells = filtwells.filter(well =>  // Filter our well array showing only relevant wells.
+            well.Licensee==companyDropdown.value);
+        }
+    //console.log(filtwells) //debug code
+    console.log("> Filtered")  
+    return filtwells;
+}
+
 function updateMarkers(){; // Function to update the well symbols as values are updates (Sliders, symbology)
+    console.log("===updateMarkers===")
     markerLayer.clearLayers(); // Clear the current markerlayer
 
-    var filteredWells = wells.filter(well =>  // Filter our well array showing only relevant wells.
-        well.Year >= sliderstart.value && well.Year <= sliderend.value);
-    
-    if (filtcompany!="Default"){
-        filteredWells = filteredWells.filter(well =>  // Filter our well array showing only relevant wells.
-            well.Licensee==filtcompany);
-    }
-
-    console.log("Updating markers.") // debug
-    console.log(symbol) // debug
+    let filtwells=filterWells(); // Get the filtered well set
+    //console.log("filtered company ", filteredwells) //debug code
+    // console.log("Symbol: "+symbol) // debug
        
     symbolColours="";
 
+    for (let i=0; i<filtwells.length;i++){  // Step through the current wells and add them to the map.
+            let wellLocation = new L.LatLng(filtwells[i].LATITUDE, filtwells[i].LONGITUDE); 
+            // console.log(filtwells[i].LATITUDE,filtwells[i].LONGITUDE); debug code
 
-    for (let i=0; i<filteredWells.length;i++){  // Step through the current wells and add them to the map.
-            let wellLocation = new L.LatLng(filteredWells[i].LATITUDE, filteredWells[i].LONGITUDE); 
-            //let marker = new L.Marker(wellLocation,{icon:wellIcon}).addTo(markerLayer)
-            let info = "<div class=infowindow><b><h3>" + filteredWells[i].Licensee + "</h3></b>"+
-                "<br><b>License Status:</b> " + filteredWells[i].Licence_Status + 
-                "<br><b>Date:</b> " + filteredWells[i].Year + 
-                "<br><b>Total Depth:</b> " + filteredWells[i].Final_Total_Depth + "m"+
+            let info = "<div class=infowindow><b><h3>" + filtwells[i].Well_UWI + "</h3></b>"+
+                "<b>Company:</b> " + filtwells[i].Licensee +     
+                "<br><b>Spud Date:</b> " + filtwells[i].Spud_Date + 
+                "<br><b>License Status:</b> " + filtwells[i].Licence_Status + 
+                "<br><b>Total Depth:</b> " + filtwells[i].Final_Total_Depth + "m"+
                 "</p></div>";
-            if(symbol=="COMP"){
+            if(symbolization.value=="COMP"){
                 symbolColours=companyColour(); 
-                let marker = new L.circleMarker(wellLocation,{radius:5,fillColor:symbolColours[filteredWells[i].Licensee],color:'#000',weight:1,fillopacity:0.9}).addTo(markerLayer).bindPopup(info);
-                console.log(symbolColours[filteredWells[i].Licensee]);
+                let marker = new L.circleMarker(wellLocation,{radius:5,fillColor:symbolColours[filtwells[i].Licensee],color:'#000',weight:1,fillopacity:0.9}).addTo(markerLayer).bindPopup(info);
+                // console.log(symbolColours[filteredWells[i].Licensee]); // debug code
+                legend.addTo(map);
             }
-            else if (symbol=="LIC"){
+            else if (symbolization.value=="LIC"){
                 symbolColours=licenseColour();
-                let marker = new L.circleMarker(wellLocation,{radius:5,fillColor:symbolColours[filteredWells[i].Licence_Status],color:'#000',weight:1,fillopacity:0.9}).addTo(markerLayer).bindPopup(info);
-                console.log(symbolColours[filteredWells[i].Licensee]);   
+                let marker = new L.circleMarker(wellLocation,{radius:5,fillColor:symbolColours[filtwells[i].Licence_Status],color:'#000',weight:1,fillopacity:0.9}).addTo(markerLayer).bindPopup(info);
+                // console.log(symbolColours[filteredWells[i].Licensee]);  // debug code 
+                legend.addTo(map);
             }
             else
             {
                 let marker = new L.circleMarker(wellLocation,{radius:5,fillColor:'#ebb104',color:'#000',weight:1,fillopacity:0.8}).addTo(markerLayer).bindPopup(info);
+                legend.remove();
             }
     }
-    console.log("> Updated.") // debug
-    wellsperyear(); // Update wells histograms
-    return filteredWells;
+    console.log("> Updated."); // debug
+    wellsperyear();
 }
 
 function fnv1aHash(str) { // Function to create a unique number based on the company name
@@ -189,7 +185,7 @@ function fnv1aHash(str) { // Function to create a unique number based on the com
 }
 
 function assignColours(entity,max,label){ 
-    console.log("Building legend Colours")
+    //console.log("Building legend Colours") // debug code
     //Script to generate colors and names for X number of companies with all others listed as other
     //company is the data array to process
     //max is the number of companies to give colours to.
@@ -202,24 +198,24 @@ function assignColours(entity,max,label){
         accumulator[key]=(accumulator[key]||0)+1;
         return accumulator;
     },{}); // This line steps through the data array and makes a count of each discrete entry.
-    entityarray=Object.entries(entitycount).map(([Licensee,count])=>({Licensee,count})) //Convert from array to object
+    entityarray=Object.entries(entitycount).map(([Licensee,count])=>({[label]:Licensee,count})) //Convert from array to object
     sorted=entityarray.sort((a, b) => b.count - a.count) // sort object based on count
-    console.log("length "+ sorted.length)
+    //console.log("length "+ sorted.length) // debug code
 
-    var otherentry=1
+    let otherentry=1
     if(max>sorted.length){
         max=sorted.length;
         otherentry=0
     }
-    console.log("entity:" + sorted);
+    // console.log("entity:", sorted); // debug code
     for (i=0;i<sorted.length;i++){ // Step through the new list and generate a hash and colour for first max entires
     if(i<max){
-        console.log("hash: "+sorted[i][label])
+        //console.log("hash: "+sorted[i][label]) // debug code
         hash=fnv1aHash(sorted[i][label]);
         entitycolours[sorted[i][label]]=`hsl(${hash%360}, 75%, 50%)`
         colourpatch=`hsl(${hash%360}, 75%, 50%)`
-        console.log("patch " + colourpatch)
-        legenddata.push({label:sorted[i][label],colour:`hsl(${hash%360}, 75%, 50%)`});
+        // console.log("patch " + colourpatch) // debug code
+        legenddata.push({label:sorted[i][label]+" ("+sorted[i]["count"]+")",colour:`hsl(${hash%360}, 75%, 50%)`});
     } else { // all remaining entries get other and grey
         entitycolours[sorted[i][label]]="hsl(0, 0, 50%)"
     }
@@ -241,7 +237,7 @@ function companyColour() {
         const hue = (index * 137.508) % 360;
         colours[Licensee] = `hsl(${hue}, 65%, 45%)`;
     });
-    console.log(colours)
+    //console.log(colours)  // Debug code
     return colours;
 }
 
@@ -256,7 +252,7 @@ function licenseColour() {
         const hue = (index * 137.508) % 360;
         colours[Licence_Status] = `hsl(${hue}, 65%, 45%)`;
     });
-    console.log(colours)
+    //console.log(colours) // debug code
     return colours;
 }
 
@@ -269,8 +265,8 @@ sliderstart.oninput = function () {
         sliderend.value=this.value;
         yearend.innerHTML = this.value;
     }
-    filteredwells=updateMarkers(); // Update the markers on the map
-    updateCompanyDropdown(filteredwells);
+    updateCompanyDropdown();
+    updateMarkers();
 }
 
 // Update the current slider value (each time you drag the slider handle)
@@ -282,13 +278,13 @@ sliderend.oninput = function () {
         sliderstart.value=this.value;
         yearstart.innerHTML = this.value;
     }
-    filteredwells=updateMarkers(); // Update the markers on the map
-    updateCompanyDropdown(filteredwells);
+    updateCompanyDropdown();
+    updateMarkers();
 }
 
-
 // Event listeners
-areadropdown.addEventListener("change",function(event){
+areadropdown.addEventListener("change",function(event){  // Runs when the area drop down changes
+    console.log("===Area Dropdown Listener: Change===")
     area=event.target.value // get the area name for easy reference
     filtcompany="Default"
     console.log("selected: ",area ); // Debugging code
@@ -330,39 +326,35 @@ areadropdown.addEventListener("change",function(event){
         resetCompanyDropdown() // No active wells, reset the company dropdown
         markerLayer.clearLayers(); // Clear the current markerlayer
     } else {
-        filteredwells=updateMarkers(); // Active wells, update the markers to reflect these
-        updateCompanyDropdown(filteredwells); // Update the company dropdown.
+        // Active wells, update the markers to reflect these
+        updateCompanyDropdown(); // Update the company dropdown.
+        updateMarkers();
     }
 });
 
-symbolization.addEventListener("change",function(event){
-    symbol=event.target.value;
+symbolization.addEventListener("change",function(event){ // Runs when the Symbolization changes.
+    console.log("===Symbolization Listener: Change===")
     updateMarkers();
-    if (symbol!=="default"){
-        legend.addTo(map);
-    }  else {
-        legend.remove();
-    }
+
 });
 
-companyDropdown.addEventListener("change",function(event){
-    filtcompany=event.target.value;
-    updateMarkers(); 
+companyDropdown.addEventListener("change",function(event){ // Runs when the companydropdown changes.
+    console.log("===Company Dropdown Listener: Change===")
+    updateMarkers();
 });
 
-function resetCompanyDropdown(){
-    console.log("Resetting Company Dropdown")
+function resetCompanyDropdown(){ // Resets the company drop down to "Default"
+    console.log("===Resetting Company Dropdown===")
     companyDropdown.length=1; // Clear the dropdown
 }
 
-function updateCompanyDropdown(filteredwells){
+function updateCompanyDropdown(){  // Updates the main company drop down to reflect the current filtered wells
+    console.log("===Updating Company Dropdown===")
     companyDropdown.length=1; // Clear the dropdown
-    const companies = [...new Set(
-        filteredWells.map(well => well.Licensee)
-    )].filter(Licensee => Licensee != null);  // Build a unqique list of companies within the area
-
-    console.log("Companies")
-    console.log(companies)
+    let filteredwells=filterWells();
+    //console.log(filteredwells) //debug code
+    const companies =[...new Set(filteredwells.map(well=>well.Licensee))].filter(Licensee => Licensee != null);
+    //console.log("companies: ", companies) //debug code
 
     companies.forEach(company => {
         console.log("Adding: " + company)
@@ -371,9 +363,7 @@ function updateCompanyDropdown(filteredwells){
         option.textContent=company;
         companyDropdown.appendChild(option);
     });
-
 };
-
 
 // These handle the hide/show controls for the sidebar
 
@@ -381,23 +371,29 @@ document.getElementById("btnHideControls").addEventListener("click", () => {
     controlpanel.hidden = !controlpanel.hidden;
 });
 
-
+// These functions deal with the legend
 const legend=L.control({
     position: 'bottomright'
 });
 
 legend.onAdd = function(map) {
+    console.log("Adding to map.")
     let html=""
     const div = L.DomUtil.create('div', 'info');
-    if (symbol=="COMP"){
-        filteredwells=updateMarkers();
-        console.log(filteredwells);
-        const [wellcolours,legenddata]=assignColours(filteredWells,5,"Licensee");
-        console.log(legenddata);
+    filtwells=filterWells();
+    
+    if (symbolization.value=="COMP"){
+        // console.log(filteredwells); //debug code
+        const [wellcolours,legenddata]=assignColours(filtwells,5,"Licensee");
+        // console.log(legenddata); //debug code
         html=generatelegend(legenddata);
-        div.innerHTML = '<h4>Companies</h4>' + html;
-    } else if (symbol=="LIC"){
-        div.innerHTML = '<h4>License</h4>';
+        div.innerHTML = '<h4>Companies (Top 5)</h4>' + html;
+    } else if (symbolization.value=="LIC"){
+        // console.log(filteredwells); //debug code
+        const [wellcolours,legenddata]=assignColours(filtwells,5,"Licence_Status");
+        // console.log(legenddata); //debug code
+        html=generatelegend(legenddata);
+        div.innerHTML = '<h4>License Status (Top 5)</h4>' + html;
     } else {
         div.innerHTML = '<h4>Select Colour by</h4>';
     }
@@ -406,6 +402,7 @@ legend.onAdd = function(map) {
 };
 
 function generatelegend(legenddata){
+    console.log(legenddata)
     html=""
         legenddata.forEach(x => {
         html+=`
