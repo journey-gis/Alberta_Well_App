@@ -69,6 +69,10 @@ footer {
 .sideDropdown{
     width: 200px;
 }
+.sideMultiSelect{
+    width: 200px;
+    Height:200px;
+}
 
 /* Button Styling */
 .sidebutton {
