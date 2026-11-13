@@ -120,15 +120,22 @@ function wellsperyear(){ // Function to update and render the two histograms (De
 
 function filterWells(){
     console.log("===Filterwells===")  
+
+    const selectedCompanies = Array.from(companyDropdown.selectedOptions)
+    .map(option => option.value);
+
+    console.log("multi-select:",selectedCompanies);
+
+
     // console.log("Filtering "+sliderstart.value+" to "+sliderend.value) //debug code
-    // console.log("Filtering "+ filtcompany) //debug code
+    console.log("Filtering "+ companyDropdown.value) //debug code
     let filtwells="";
     filtwells = wells.filter(well =>  // Filter our well array showing only relevant wells.
         well.Year >= sliderstart.value && well.Year <= sliderend.value);
 
-    if (companyDropdown.value!="Default"){
+    if (companyDropdown.value!="Default" && companyDropdown.value!=""){
         filtwells = filtwells.filter(well =>  // Filter our well array showing only relevant wells.
-            well.Licensee==companyDropdown.value);
+            selectedCompanies.includes(well.Licensee));
         }
     //console.log(filtwells) //debug code
     console.log("> Filtered")  
@@ -177,17 +184,6 @@ function updateMarkers(){; // Function to update the well symbols as values are 
     }
     console.log("> Updated."); // debug
     wellsperyear();
-}
-
-function fnv1aHash(str) { // Function to create a unique number based on the company name
-  let hash = 0x811c9dc5; // FNV offset basis
-
-  for (let i = 0; i < str.length; i++) {
-    hash ^= str.charCodeAt(i);
-    // Multiply by FNV prime (16777619) using 32-bit bitwise operations
-    hash = Math.imul(hash, 0x01000193);
-  }
-  return hash >>> 0; // Convert to unsigned 32-bit integer
 }
 
 function assignColours(entity,max,label){ 
@@ -333,9 +329,9 @@ function resetCompanyDropdown(){ // Resets the company drop down to "Default"
 function updateCompanyDropdown(){  // Updates the main company drop down to reflect the current filtered wells
     console.log("===Updating Company Dropdown===")
     companyDropdown.length=1; // Clear the dropdown
-    let filteredwells=filterWells();
-    //console.log(filteredwells) //debug code
-    const companies =[...new Set(filteredwells.map(well=>well.Licensee))].filter(Licensee => Licensee != null);
+    let filtwells=filterWells();
+    //console.log(filtwells) //debug code
+    const companies =[...new Set(filtwells.map(well=>well.Licensee))].filter(Licensee => Licensee != null);
     //console.log("companies: ", companies) //debug code
 
     companies.forEach(company => {
