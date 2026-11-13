@@ -152,24 +152,82 @@ function updateMarkers(){; // Function to update the well symbols as values are 
     for (let i=0; i<filteredWells.length;i++){  // Step through the current wells and add them to the map.
             let wellLocation = new L.LatLng(filteredWells[i].LATITUDE, filteredWells[i].LONGITUDE); 
             //let marker = new L.Marker(wellLocation,{icon:wellIcon}).addTo(markerLayer)
+            let info = "<div class=infowindow><b><h3>" + filteredWells[i].Licensee + "</h3></b>"+
+                "<br><b>License Status:</b> " + filteredWells[i].Licence_Status + 
+                "<br><b>Date:</b> " + filteredWells[i].Year + 
+                "<br><b>Total Depth:</b> " + filteredWells[i].Final_Total_Depth + "m"+
+                "</p></div>";
             if(symbol=="COMP"){
                 symbolColours=companyColour(); 
-                let marker = new L.circleMarker(wellLocation,{radius:5,fillColor:symbolColours[filteredWells[i].Licensee],color:'#000',weight:1,fillopacity:0.9}).addTo(markerLayer);
+                let marker = new L.circleMarker(wellLocation,{radius:5,fillColor:symbolColours[filteredWells[i].Licensee],color:'#000',weight:1,fillopacity:0.9}).addTo(markerLayer).bindPopup(info);
                 console.log(symbolColours[filteredWells[i].Licensee]);
             }
             else if (symbol=="LIC"){
                 symbolColours=licenseColour();
-                let marker = new L.circleMarker(wellLocation,{radius:5,fillColor:symbolColours[filteredWells[i].Licence_Status],color:'#000',weight:1,fillopacity:0.9}).addTo(markerLayer);
+                let marker = new L.circleMarker(wellLocation,{radius:5,fillColor:symbolColours[filteredWells[i].Licence_Status],color:'#000',weight:1,fillopacity:0.9}).addTo(markerLayer).bindPopup(info);
                 console.log(symbolColours[filteredWells[i].Licensee]);   
             }
             else
             {
-                let marker = new L.circleMarker(wellLocation,{radius:5,fillColor:'#ebb104',color:'#000',weight:1,fillopacity:0.8}).addTo(markerLayer);
+                let marker = new L.circleMarker(wellLocation,{radius:5,fillColor:'#ebb104',color:'#000',weight:1,fillopacity:0.8}).addTo(markerLayer).bindPopup(info);
             }
     }
     console.log("> Updated.") // debug
     wellsperyear(); // Update wells histograms
     return filteredWells;
+}
+
+function fnv1aHash(str) { // Function to create a unique number based on the company name
+  let hash = 0x811c9dc5; // FNV offset basis
+
+  for (let i = 0; i < str.length; i++) {
+    hash ^= str.charCodeAt(i);
+    // Multiply by FNV prime (16777619) using 32-bit bitwise operations
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return hash >>> 0; // Convert to unsigned 32-bit integer
+}
+
+function assignColours(entity,max,label){ 
+    console.log("Building legend Colours")
+    //Script to generate colors and names for X number of companies with all others listed as other
+    //company is the data array to process
+    //max is the number of companies to give colours to.
+    //Result is two lists, one has a legend name and the other the mapping colour
+    const entitycolours={}; // place holder
+    const legendnames={}; // place holder
+    const legenddata=[];
+    const entitycount = entity.reduce((accumulator,item) => {
+        const key=item[label];
+        accumulator[key]=(accumulator[key]||0)+1;
+        return accumulator;
+    },{}); // This line steps through the data array and makes a count of each discrete entry.
+    entityarray=Object.entries(entitycount).map(([Licensee,count])=>({Licensee,count})) //Convert from array to object
+    sorted=entityarray.sort((a, b) => b.count - a.count) // sort object based on count
+    console.log("length "+ sorted.length)
+
+    var otherentry=1
+    if(max>sorted.length){
+        max=sorted.length;
+        otherentry=0
+    }
+    console.log("entity:" + sorted);
+    for (i=0;i<sorted.length;i++){ // Step through the new list and generate a hash and colour for first max entires
+    if(i<max){
+        console.log("hash: "+sorted[i][label])
+        hash=fnv1aHash(sorted[i][label]);
+        entitycolours[sorted[i][label]]=`hsl(${hash%360}, 75%, 50%)`
+        colourpatch=`hsl(${hash%360}, 75%, 50%)`
+        console.log("patch " + colourpatch)
+        legenddata.push({label:sorted[i][label],colour:`hsl(${hash%360}, 75%, 50%)`});
+    } else { // all remaining entries get other and grey
+        entitycolours[sorted[i][label]]="hsl(0, 0, 50%)"
+    }
+    }
+    if (otherentry==1){
+        legenddata.push({label:"Other",colour:`hsl(0, 0%, 50%)`});
+    }
+    return [entitycolours,legenddata];
 }
 
 function companyColour() {
@@ -178,7 +236,7 @@ function companyColour() {
     )].filter(Licensee => Licensee != null);  // Build a unqique list of companies within the area
 
     const colours = {}; // Set up an empty dictionary to store the generated colours
-    console.log(companies) // debug
+    //console.log(companies) // debug
     companies.sort().forEach((Licensee, index) => {
         const hue = (index * 137.508) % 360;
         colours[Licensee] = `hsl(${hue}, 65%, 45%)`;
@@ -193,7 +251,7 @@ function licenseColour() {
     )].filter(Licence_Status => Licence_Status != null);  // Build a unqique list of companies within the area
 
     const colours = {}; // Set up an empty dictionary to store the generated colours
-    console.log(licenses) // debug
+    //console.log(licenses) // debug
     licenses.sort().forEach((Licence_Status, index) => {
         const hue = (index * 137.508) % 360;
         colours[Licence_Status] = `hsl(${hue}, 65%, 45%)`;
@@ -329,9 +387,15 @@ const legend=L.control({
 });
 
 legend.onAdd = function(map) {
+    let html=""
     const div = L.DomUtil.create('div', 'info');
     if (symbol=="COMP"){
-        div.innerHTML = '<h4>Companies</h4>';
+        filteredwells=updateMarkers();
+        console.log(filteredwells);
+        const [wellcolours,legenddata]=assignColours(filteredWells,5,"Licensee");
+        console.log(legenddata);
+        html=generatelegend(legenddata);
+        div.innerHTML = '<h4>Companies</h4>' + html;
     } else if (symbol=="LIC"){
         div.innerHTML = '<h4>License</h4>';
     } else {
@@ -341,3 +405,15 @@ legend.onAdd = function(map) {
     return div;
 };
 
+function generatelegend(legenddata){
+    html=""
+        legenddata.forEach(x => {
+        html+=`
+            <div class="legend-item">
+            <span class="legend-patch" style ="background-color:${x.colour};"></span>
+            <span class="legend-label">${x.label}</span>
+            </div>
+        `;
+        });
+    return html;
+}

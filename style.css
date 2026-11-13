@@ -39,6 +39,10 @@ footer {
     border: 5px solid black; 
 }
 
+#infowindow{
+    font-size:small;
+}
+
 .charts {
     display: grid;
     grid-template-rows: 1fr 1fr;
