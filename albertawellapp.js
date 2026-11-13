@@ -152,14 +152,16 @@ function updateMarkers(){; // Function to update the well symbols as values are 
                 "<br><b>Total Depth:</b> " + filtwells[i].Final_Total_Depth + "m"+
                 "</p></div>";
             if(symbolization.value=="COMP"){
-                symbolColours=companyColour(); 
-                let marker = new L.circleMarker(wellLocation,{radius:5,fillColor:symbolColours[filtwells[i].Licensee],color:'#000',weight:1,fillopacity:0.9}).addTo(markerLayer).bindPopup(info);
+                const [symbolColours,legenddata]=assignColours(filtwells,5,"Licensee");
+                console.log("symbolization: ",symbolColours);
+                let marker = new L.circleMarker(wellLocation,{radius:5,fillColor:symbolColours[filtwells[i].Licensee],color:'#000',weight:1,fillOpacity: 1.0}).addTo(markerLayer).bindPopup(info);
                 // console.log(symbolColours[filteredWells[i].Licensee]); // debug code
                 legend.addTo(map);
             }
             else if (symbolization.value=="LIC"){
-                symbolColours=licenseColour();
-                let marker = new L.circleMarker(wellLocation,{radius:5,fillColor:symbolColours[filtwells[i].Licence_Status],color:'#000',weight:1,fillopacity:0.9}).addTo(markerLayer).bindPopup(info);
+                const [symbolColours,legenddata]=assignColours(filtwells,5,"Licence_Status");
+                console.log("symbolization: ",symbolColours);
+                let marker = new L.circleMarker(wellLocation,{radius:5,fillColor:symbolColours[filtwells[i].Licence_Status],color:'#000',weight:1,fillOpacity:1.0}).addTo(markerLayer).bindPopup(info);
                 // console.log(symbolColours[filteredWells[i].Licensee]);  // debug code 
                 legend.addTo(map);
             }
@@ -190,7 +192,8 @@ function assignColours(entity,max,label){
     //company is the data array to process
     //max is the number of companies to give colours to.
     //Result is two lists, one has a legend name and the other the mapping colour
-    const entitycolours={}; // place holder
+    const entcolours=['#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99']
+    const entitycolours={};
     const legendnames={}; // place holder
     const legenddata=[];
     const entitycount = entity.reduce((accumulator,item) => {
@@ -202,58 +205,25 @@ function assignColours(entity,max,label){
     sorted=entityarray.sort((a, b) => b.count - a.count) // sort object based on count
     //console.log("length "+ sorted.length) // debug code
 
-    let otherentry=1
-    if(max>sorted.length){
-        max=sorted.length;
-        otherentry=0
+    let otherentry=1 // Set a flag to see if we need an "other" entry on the legend
+    if(max>sorted.length){ // if our requested display is more than the number of entries, we do not
+        max=sorted.length; // set our requested number to the total number
+        otherentry=0 // set the other flag to 0.
     }
-    // console.log("entity:", sorted); // debug code
+    //console.log("entity:", sorted); // debug code
     for (i=0;i<sorted.length;i++){ // Step through the new list and generate a hash and colour for first max entires
     if(i<max){
-        //console.log("hash: "+sorted[i][label]) // debug code
-        hash=fnv1aHash(sorted[i][label]);
-        entitycolours[sorted[i][label]]=`hsl(${hash%360}, 75%, 50%)`
-        colourpatch=`hsl(${hash%360}, 75%, 50%)`
-        // console.log("patch " + colourpatch) // debug code
-        legenddata.push({label:sorted[i][label]+" ("+sorted[i]["count"]+")",colour:`hsl(${hash%360}, 75%, 50%)`});
+        entitycolours[sorted[i][label]]=entcolours[i]
+        legenddata.push({label:sorted[i][label]+" ("+sorted[i]["count"]+")",colour:entcolours[i]});
     } else { // all remaining entries get other and grey
-        entitycolours[sorted[i][label]]="hsl(0, 0, 50%)"
+        entitycolours[sorted[i][label]]=`hsl(0, 0, 50%)`
     }
     }
     if (otherentry==1){
         legenddata.push({label:"Other",colour:`hsl(0, 0%, 50%)`});
     }
+    //console.log(entitycolours)
     return [entitycolours,legenddata];
-}
-
-function companyColour() {
-    const companies = [...new Set(
-        wells.map(well => well.Licensee)
-    )].filter(Licensee => Licensee != null);  // Build a unqique list of companies within the area
-
-    const colours = {}; // Set up an empty dictionary to store the generated colours
-    //console.log(companies) // debug
-    companies.sort().forEach((Licensee, index) => {
-        const hue = (index * 137.508) % 360;
-        colours[Licensee] = `hsl(${hue}, 65%, 45%)`;
-    });
-    //console.log(colours)  // Debug code
-    return colours;
-}
-
-function licenseColour() {
-    const licenses = [...new Set(
-        wells.map(well => well.Licence_Status)
-    )].filter(Licence_Status => Licence_Status != null);  // Build a unqique list of companies within the area
-
-    const colours = {}; // Set up an empty dictionary to store the generated colours
-    //console.log(licenses) // debug
-    licenses.sort().forEach((Licence_Status, index) => {
-        const hue = (index * 137.508) % 360;
-        colours[Licence_Status] = `hsl(${hue}, 65%, 45%)`;
-    });
-    //console.log(colours) // debug code
-    return colours;
 }
 
 // Update the current slider value (each time you drag the slider handle)
