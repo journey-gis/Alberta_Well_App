@@ -444,12 +444,7 @@ function generatelegend(legenddata,type){
 
     }
 }
-
-document.getElementById("gradienttest").addEventListener("click", () => {
-    console.log(getColourRamp())
-});
-
-    
+  
 function getColourRamp(){
     console.log("===Generating Colour Ramp===");
     // Assigns labels to the existing classes
