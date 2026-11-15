@@ -66,12 +66,13 @@ footer {
     display: block;
     font-size:small;
 }
+
 .sideDropdown{
     width: 200px;
 }
 .sideMultiSelect{
     width: 200px;
-    Height:200px;
+    Height:100px;
 }
 
 /* Button Styling */
@@ -92,6 +93,12 @@ footer {
 .sidebutton:hover {
   background-color: #15cc2e; /* Green */
   color: white;
+}
+
+.helpcontainer{
+  position: relative;
+  cursor: pointer;
+  background-color: green;
 }
 
 /* Legend content */

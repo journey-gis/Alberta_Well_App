@@ -6,6 +6,7 @@
 
 document.addEventListener("DOMContentLoaded", () => {
     console.log("Page is ready!"); // debug
+    helpcontrol.hidden=!helpcontrol.hidden
     initializeMap();
 });
 
@@ -18,6 +19,8 @@ const sliderstart =document.getElementById("yearStart");
 const sliderend = document.getElementById("yearEnd");
 const yearstart = document.getElementById("selectedYearStart");
 const yearend = document.getElementById("selectedYearEnd");
+const depthBinText = document.getElementById("depthBinText");
+const depthBin = document.getElementById("depthBin");
 
 // Get the object IDs for the filters
 const symbolization = document.getElementById("symbolization");
@@ -43,6 +46,7 @@ function initializeMap(){     //Create the map object and set the centre point a
     // Set the text on the page to be the starting year values
     yearstart.innerHTML=sliderstart.value;
     yearend.innerHTML=sliderend.value;
+    depthBinText.innerHTML=depthBin.value+"m";
 
     wellsperyear(); // Update the histograms
     console.log("Map loaded!"); // debug
@@ -78,11 +82,11 @@ function wellsperyear(){ // Function to update and render the two histograms (De
 
     const layout2 = {
         title: {
-            text: "Well Depth"
+            text: "Well Depth Distribution"
         },
         xaxis: {
             title: { text: "Depth" },
-            dtick: 1000,
+            dtick: Number(depthBin.value),
             automargin: true,
             type: "linear"
         },
@@ -112,7 +116,7 @@ function wellsperyear(){ // Function to update and render the two histograms (De
         x:depths,
         type:"histogram",
         xbins:{
-            size:500
+            size:depthBin.value
         }
     }],layout2,{responsive: true});
     console.log("Charts completed") // debug
@@ -148,12 +152,35 @@ function updateMarkers(){; // Function to update the well symbols as values are 
     let filtwells=filterWells(); // Get the filtered well set
     //console.log("filtered company ", filteredwells) //debug code
     // console.log("Symbol: "+symbol) // debug
-       
-    symbolColours="";
+    
+    let symbolColours="";
+    let colourField=""
 
+    if(symbolization.value=="COMP"){
+        const [symbols,legenddata]=assignColours(filtwells,5,"Licensee","discrete");
+        symbolColours=symbols;
+        console.log(legenddata);
+        console.log("symbolization: ",symbolColours);
+        colourField="Licensee";
+    }
+    else if (symbolization.value=="LIC"){
+        const [symbols,legenddata]=assignColours(filtwells,5,"Licence_Status","discrete");
+        symbolColours=symbols;
+        console.log("symbolization: ",symbolColours);
+        colourField="License_Status"
+    }
+    else if (symbolization.value=="DEP"){
+        const [symbols,depthWells]=getColourRamp();
+        symbolColours=symbols;
+        filtwells=depthWells;
+        console.log("symbolization: ",symbolColours);
+        colourField="binLabel"
+    }
+
+    console.log(filtwells)
     for (let i=0; i<filtwells.length;i++){  // Step through the current wells and add them to the map.
             let wellLocation = new L.LatLng(filtwells[i].LATITUDE, filtwells[i].LONGITUDE); 
-            // console.log(filtwells[i].LATITUDE,filtwells[i].LONGITUDE); debug code
+            //console.log(filtwells[i].LATITUDE,filtwells[i].LONGITUDE); debug code
 
             let info = "<div class=infowindow><b><h3>" + filtwells[i].Well_UWI + "</h3></b>"+
                 "<b>Company:</b> " + filtwells[i].Licensee +     
@@ -161,76 +188,78 @@ function updateMarkers(){; // Function to update the well symbols as values are 
                 "<br><b>License Status:</b> " + filtwells[i].Licence_Status + 
                 "<br><b>Total Depth:</b> " + filtwells[i].Final_Total_Depth + "m"+
                 "</p></div>";
-            if(symbolization.value=="COMP"){
-                const [symbolColours,legenddata]=assignColours(filtwells,5,"Licensee");
-                console.log("symbolization: ",symbolColours);
-                let marker = new L.circleMarker(wellLocation,{radius:5,fillColor:symbolColours[filtwells[i].Licensee],color:'#000',weight:1,fillOpacity: 1.0}).addTo(markerLayer).bindPopup(info);
-                // console.log(symbolColours[filteredWells[i].Licensee]); // debug code
-                legend.addTo(map);
-            }
-            else if (symbolization.value=="LIC"){
-                const [symbolColours,legenddata]=assignColours(filtwells,5,"Licence_Status");
-                console.log("symbolization: ",symbolColours);
-                let marker = new L.circleMarker(wellLocation,{radius:5,fillColor:symbolColours[filtwells[i].Licence_Status],color:'#000',weight:1,fillOpacity:1.0}).addTo(markerLayer).bindPopup(info);
-                // console.log(symbolColours[filteredWells[i].Licensee]);  // debug code 
-                legend.addTo(map);
-            }
-            else
-            {
-                let marker = new L.circleMarker(wellLocation,{radius:5,fillColor:'#ebb104',color:'#000',weight:1,fillopacity:0.8}).addTo(markerLayer).bindPopup(info);
+            if(symbolization.value!="default"){
+                console.log("Not Default!")
+                let marker = new L.circleMarker(wellLocation,{radius:5,fillColor:symbolColours[filtwells[i][colourField]],color:'#000',weight:1,fillOpacity: 1.0}).addTo(markerLayer).bindPopup(info);
+                console.log(symbolColours);
+                console.log(filtwells[i][colourField]); // debug code
+
+            } else {
+                let marker = new L.circleMarker(wellLocation,{radius:5,fillColor:'#ebb104',color:'#000',weight:1,fillOpacity:1}).addTo(markerLayer).bindPopup(info);
                 legend.remove();
             }
+    }
+    if(symbolization.value!="default"){
+        legend.addTo(map);
+    } else {
+        legend.remove();
     }
     console.log("> Updated."); // debug
     wellsperyear();
 }
 
-function assignColours(entity,max,label){ 
+function assignColours(entity,max,label,type){ 
     //console.log("Building legend Colours") // debug code
     //Script to generate colors and names for X number of companies with all others listed as other
     //company is the data array to process
     //max is the number of companies to give colours to.
     //Result is two lists, one has a legend name and the other the mapping colour
-    const entcolours=['#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99']
-    const entitycolours={};
-    const legendnames={}; // place holder
-    const legenddata=[];
-    const entitycount = entity.reduce((accumulator,item) => {
-        const key=item[label];
-        accumulator[key]=(accumulator[key]||0)+1;
-        return accumulator;
-    },{}); // This line steps through the data array and makes a count of each discrete entry.
-    entityarray=Object.entries(entitycount).map(([Licensee,count])=>({[label]:Licensee,count})) //Convert from array to object
-    sorted=entityarray.sort((a, b) => b.count - a.count) // sort object based on count
-    //console.log("length "+ sorted.length) // debug code
-
-    let otherentry=1 // Set a flag to see if we need an "other" entry on the legend
-    if(max>sorted.length){ // if our requested display is more than the number of entries, we do not
-        max=sorted.length; // set our requested number to the total number
-        otherentry=0 // set the other flag to 0.
+    //entity = datatset to be processed
+    //max = max number of entries or height of a continuous colour bar.
+    //label = The data to assign colours to
+    //type = discrete or continuous
+    if(type=="discrete"){
+        const entcolours=['#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99']
+        const entitycolours={};
+        const legendnames={}; // place holder
+        const legenddata=[];
+        const entitycount = entity.reduce((accumulator,item) => {
+            const key=item[label];
+            accumulator[key]=(accumulator[key]||0)+1;
+            return accumulator;
+        },{}); // This line steps through the data array and makes a count of each discrete entry.
+        entityarray=Object.entries(entitycount).map(([Licensee,count])=>({[label]:Licensee,count})) //Convert from array to object
+        sorted=entityarray.sort((a, b) => b.count - a.count) // sort object based on count
+        console.log("entity: ",entity)
+        console.log("length "+ sorted.length) // debug code
+        console.log("well data: ",sorted)
+        let otherentry=1 // Set a flag to see if we need an "other" entry on the legend
+        if(max>sorted.length){ // if our requested display is more than the number of entries, we do not
+            max=sorted.length; // set our requested number to the total number
+            otherentry=0 // set the other flag to 0.
+        }
+        //console.log("entity:", sorted); // debug code
+        for (i=0;i<sorted.length;i++){ // Step through the new list and generate a hash and colour for first max entires
+        if(i<max){
+            entitycolours[sorted[i][label]]=entcolours[i]
+            legenddata.push({label:sorted[i][label]+" ("+sorted[i]["count"]+")",colour:entcolours[i]});
+        } else { // all remaining entries get other and grey
+            entitycolours[sorted[i][label]]='#808080'
+        }
+        }
+        if (otherentry==1){
+            legenddata.push({label:"Other",colour:'#808080'});
+        }
+        //console.log(entitycolours)
+        return [entitycolours,legenddata];
     }
-    //console.log("entity:", sorted); // debug code
-    for (i=0;i<sorted.length;i++){ // Step through the new list and generate a hash and colour for first max entires
-    if(i<max){
-        entitycolours[sorted[i][label]]=entcolours[i]
-        legenddata.push({label:sorted[i][label]+" ("+sorted[i]["count"]+")",colour:entcolours[i]});
-    } else { // all remaining entries get other and grey
-        entitycolours[sorted[i][label]]='#808080'
-    }
-    }
-    if (otherentry==1){
-        legenddata.push({label:"Other",colour:'#808080'});
-    }
-    //console.log(entitycolours)
-    return [entitycolours,legenddata];
 }
 
 // Update the current slider value (each time you drag the slider handle)
 sliderstart.oninput = function () {
     console.log(this.value); // debug
     yearstart.innerHTML = this.value; // Set the text on the webpage to the current value
-    end=sliderend.value; // Get the current value of the end slider
-    if(end<this.value){ // Check and make sure the start slider is always smaller or equal to the end
+    if(sliderend.value<this.value){ // Check and make sure the start slider is always smaller or equal to the end
         sliderend.value=this.value;
         yearend.innerHTML = this.value;
     }
@@ -242,14 +271,23 @@ sliderstart.oninput = function () {
 sliderend.oninput = function () {
     console.log(this.value); // debug
     yearend.innerHTML = this.value; // Set the text on the webpage to the current value
-    start=sliderstart.value; // Get the current value of the start slider
-    if(start>this.value){ // Check and make sure the end slider is always larger or equal to the start
+    if(sliderstart.value>this.value){ // Check and make sure the end slider is always larger or equal to the start
         sliderstart.value=this.value;
         yearstart.innerHTML = this.value;
     }
     updateCompanyDropdown();
     updateMarkers();
 }
+
+// Update the current slider value (each time you drag the slider handle)
+depthBin.oninput = function () {
+    console.log(this.value); // debug
+    depthBinText.innerHTML = this.value+"m"; // Set the text on the webpage to the current value
+    //updateCompanyDropdown();
+    updateMarkers();
+}
+
+
 function getwellCentre(wells){
     console.log("===Getting Well Centre===")
     let latsum=0
@@ -345,7 +383,7 @@ function updateCompanyDropdown(){  // Updates the main company drop down to refl
 // These handle the hide/show controls for the sidebar
 
 document.getElementById("btnHideControls").addEventListener("click", () => {
-    controlpanel.hidden = !controlpanel.hidden;
+    helpcontrol.hidden = !helpcontrol.hidden;
 });
 
 // These functions deal with the legend
@@ -361,26 +399,35 @@ legend.onAdd = function(map) {
     
     if (symbolization.value=="COMP"){
         // console.log(filteredwells); //debug code
-        const [wellcolours,legenddata]=assignColours(filtwells,5,"Licensee");
+        const [wellcolours,legenddata]=assignColours(filtwells,5,"Licensee","discrete");
         // console.log(legenddata); //debug code
-        html=generatelegend(legenddata);
+        html=generatelegend(legenddata,"discrete");
         div.innerHTML = '<h4>Companies (Top 5)</h4>' + html;
     } else if (symbolization.value=="LIC"){
         // console.log(filteredwells); //debug code
-        const [wellcolours,legenddata]=assignColours(filtwells,5,"Licence_Status");
+        const [wellcolours,legenddata]=assignColours(filtwells,5,"Licence_Status","discrete");
         // console.log(legenddata); //debug code
-        html=generatelegend(legenddata);
+        html=generatelegend(legenddata,"discrete");
         div.innerHTML = '<h4>License Status (Top 5)</h4>' + html;
+    } else if (symbolization.value=="DEP"){
+        // console.log(filteredwells); //debug code
+        const [colourRamp,wells,legenddata]=getColourRamp();
+        // console.log(legenddata); //debug code
+        html=generatelegend(legenddata,"discrete");
+        div.innerHTML = '<h4>Depth (m)</h4>' + html;
     } else {
         div.innerHTML = '<h4>Select Colour by</h4>';
     }
-  
+
     return div;
 };
 
-function generatelegend(legenddata){
-    console.log(legenddata)
-    html=""
+function generatelegend(legenddata,type){
+    if (type=="discrete"){
+        console.log("legend data",legenddata)
+        console.log(legenddata[0].colour)
+        console.log(legenddata[legenddata.length-1].colour)
+        html=""
         legenddata.forEach(x => {
         html+=`
             <div class="legend-item">
@@ -389,5 +436,59 @@ function generatelegend(legenddata){
             </div>
         `;
         });
-    return html;
+        return html;
+    } else if (type=="continuous"){
+        startcolour=legenddata[0].colour
+        endcolour=legenddata[legenddata.length-1]
+        html=""
+
+    }
+}
+
+document.getElementById("gradienttest").addEventListener("click", () => {
+    console.log(getColourRamp())
+});
+
+    
+function getColourRamp(){
+    console.log("===Generating Colour Ramp===");
+    // Assigns labels to the existing classes
+    let colourRamp=[];
+    let legenddata=[];
+    let bin=Number(depthBin.value);
+    let wells=filterWells();
+    if (wells.length>0) {
+        let lowestbin=1000000000;
+        let highestbin=0;
+        for (let i=0;i<wells.length;i++){
+            depthvalue=Math.ceil(wells[i].Final_Total_Depth/bin)
+            if(depthvalue<lowestbin) lowestbin=depthvalue;
+            if(depthvalue>highestbin) highestbin=depthvalue;
+            wells[i].binLabel=`${(depthvalue*bin)-(bin-1)} - ${depthvalue*bin}`
+        }
+        startbin=(lowestbin*bin)-(bin-1);
+        endbin=highestbin*bin;
+
+        let bins = Math.ceil((endbin-startbin)/bin);
+        const gradColours = chroma.scale(['blue', 'yellow', 'red']).colors(bins);
+        // generate whole list of values for colour ramp.
+        colourIndex=0
+        for(let i=startbin;i<endbin;i=i+bin){
+            colourRamp[i+" - "+(i+bin-1)]=gradColours[colourIndex]
+            colourIndex++;
+        }
+
+        let keys = [];
+        for (var key in colourRamp) {
+            keys.push(key);
+}   
+
+        console.log("colour ramp",colourRamp)
+        console.log(keys)
+        legenddata.push({label:keys[0],colour:gradColours[0]})
+        legenddata.push({label:"",colour:gradColours[Math.ceil(gradColours.length/2)]})
+        legenddata.push({label:keys[keys.length-1],colour:gradColours[gradColours.length-1]})
+        console.log(legenddata)
+        return [colourRamp,wells,legenddata];
+    }
 }

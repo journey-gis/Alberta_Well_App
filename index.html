@@ -3,6 +3,7 @@
     	<!-- Load plotly and jquery into the DOM -->
     	<script src='https://cdn.plot.ly/plotly-4.1.1.min.js'></script>
         <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+       <script src="https://cdnjs.cloudflare.com/ajax/libs/chroma-js/2.4.2/chroma.min.js"></script>
 
         <!-- Link to the latest Leaflet stylesheet --> 
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
@@ -29,7 +30,15 @@
     </header>
     <div class="dashboard">
         <div class="side">
-            <button class="sidebutton" id="btnHideControls">Hide/Show Filters</button><br><br>
+            <button class="sidebutton" id="btnHideControls">Hide/Show Help</button><br><br>
+            <div class="helpcontainer" id="helpcontrol">
+                <ol>
+                    <li>Select an area</li>
+                    <li>Select a range of years</li>
+                    <li>Choose how to symbolize</li>
+                    <li>Choose a subset of companies in the field</li>
+                </ol>
+            </div>
             <div class="slidecontainer" id="controlpanel">
                 <label class="sidelabel" for="areaselect">Select Field to Examine</label><br>
                 <select class="sideDropdown" id="areaselect">
@@ -51,7 +60,11 @@
                 <input type="range" min="2016" max="2026" value="2016" class="slider" id="yearEnd">
                 <br>
                 <hr>
-                <label class="sidelabel" for="symbolization">Colour based on</label><br>
+                <label class="sidelabel" for="depthBin">Select Depth Bin</label>
+                <p class="sidetext">Bin Size: <span id="depthBinText"></span></p>
+                <input type="range" min="200" max="1000" value="500" step=50 class="slider" id="depthBin">  
+                <hr>
+                <label class="sidelabel" for="symbolization">Colour Based On</label><br>
                 <select class="sideDropdown" id="symbolization">
                     <option value="default">Default</option>
                     <option value="COMP">Company</option>
@@ -60,11 +73,13 @@
                 </select>
                 <br>
                 <hr>
-                <label class="sidelabel" for="companyDropdown">Filter to Company</label><br>
+                <label class="sidelabel" for="companyDropdown">Filter to Companies</label>
+                <p class="sidetext">(ctrl-select to choose multiple)</p>
                 <select class="sideMultiSelect" id="companyDropdown" multiple>
-                    <option value="Default">Default</option>
+                    <option value="Default">None</option>
                 </select>
                 <hr>
+                <button id="gradienttest">TestGradient</button>
             </div>
             <br>
 
