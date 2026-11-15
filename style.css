@@ -3,12 +3,19 @@ body {font-family: Arial, Helvetica, sans-serif;}
 
 /* Header and footer styles */
 header {
-  background-color: #f1f1f1;
   background-image: url("well.png");
   background-repeat: no-repeat;
   background-size: contain;
   padding: 5px;
   text-align: center;
+}
+.headercontainer{
+    display:grid;
+    grid-template-columns: 1600px 1fr;
+    background-color: #f1f1f1;
+}
+.rightheadermenu{
+    float: right;
 }
 
 footer {
@@ -114,11 +121,16 @@ footer {
  	width:15px;
 	height:15px;
 	border-radius:16px;
-
+}
+.legend-patch-cont{
+	padding:8px;
+    height:8px;
+    width:30px;
 }
 .legend-label{
-	padding-left:10px;
+    padding-left: 10px;
     font-size: small;
+
 }
 
 .info{

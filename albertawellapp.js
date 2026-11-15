@@ -413,7 +413,7 @@ legend.onAdd = function(map) {
         // console.log(filteredwells); //debug code
         const [colourRamp,wells,legenddata]=getColourRamp();
         // console.log(legenddata); //debug code
-        html=generatelegend(legenddata,"discrete");
+        html=generatelegend(legenddata,"continuous");
         div.innerHTML = '<h4>Depth (m)</h4>' + html;
     } else {
         div.innerHTML = '<h4>Select Colour by</h4>';
@@ -423,11 +423,8 @@ legend.onAdd = function(map) {
 };
 
 function generatelegend(legenddata,type){
-    if (type=="discrete"){
-        console.log("legend data",legenddata)
-        console.log(legenddata[0].colour)
-        console.log(legenddata[legenddata.length-1].colour)
-        html=""
+    html=""
+    if (type=="discrete") {
         legenddata.forEach(x => {
         html+=`
             <div class="legend-item">
@@ -436,54 +433,76 @@ function generatelegend(legenddata,type){
             </div>
         `;
         });
-        return html;
-    } else if (type=="continuous"){
-        startcolour=legenddata[0].colour
-        endcolour=legenddata[legenddata.length-1]
-        html=""
-
+    } else if (type =="continuous"){
+        legenddata.forEach(x => {
+        html+=`
+            <div class="legend-item">
+            <span class="legend-patch-cont" style ="background-color:${x.colour};"></span>
+            <span class="legend-label">${x.label}</span>
+            </div>
+        `;
+        });    
     }
+    return html;
 }
+
   
 function getColourRamp(){
     console.log("===Generating Colour Ramp===");
     // Assigns labels to the existing classes
-    let colourRamp=[];
-    let legenddata=[];
-    let bin=Number(depthBin.value);
-    let wells=filterWells();
-    if (wells.length>0) {
-        let lowestbin=1000000000;
-        let highestbin=0;
-        for (let i=0;i<wells.length;i++){
-            depthvalue=Math.ceil(wells[i].Final_Total_Depth/bin)
-            if(depthvalue<lowestbin) lowestbin=depthvalue;
-            if(depthvalue>highestbin) highestbin=depthvalue;
-            wells[i].binLabel=`${(depthvalue*bin)-(bin-1)} - ${depthvalue*bin}`
+    let colourRamp=[]; // Set an empty array to receive the colour ramp
+    let legenddata=[]; // Set an empty array to recieve the legend items and colours
+    let bin=Number(depthBin.value); // Get the current bin value
+    let wells=filterWells(); // Get the wells data set
+    if (wells.length>0) { // // If the wells variable has data continue.
+        let lowestbin=1000000000;  //Used to determine the lowest bin value
+        let highestbin=0; //Used to determine the highest bin value
+        for (let i=0;i<wells.length;i++){ //Step through all the wells and assign a bin to each one
+            if (wells[i].Final_Total_Depth != null){
+                depthvalue=Math.ceil(wells[i].Final_Total_Depth/bin) // Divide the well depth by the bins and take the ceil on it to get an integer
+                if(depthvalue<lowestbin) lowestbin=depthvalue; // The next two lines compare against the current highest and lowest values
+                if(depthvalue>highestbin) highestbin=depthvalue;
+                wells[i].binLabel=`${(depthvalue*bin)-(bin-1)} - ${depthvalue*bin}` // Creates the bin label and stores it in the array
+            }
         }
-        startbin=(lowestbin*bin)-(bin-1);
-        endbin=highestbin*bin;
+        startbin=(lowestbin*bin)-(bin-1); // Determine the depth value the legend will start at
+        endbin=highestbin*bin; // Determine the depth value the legend will end at
+        
+        let numberBins = Math.ceil((endbin-startbin)/bin); // Determine the total number of bins.
+        let gradColours=[];
+        if (numberBins<20){
+            // generate whole list of values for colour ramp.
+            gradColours = chroma.scale(['#5CFF92','#F52727']).colors(numberBins); // Create an array of colour gradients.  This is from the chroma-js library.
 
-        let bins = Math.ceil((endbin-startbin)/bin);
-        const gradColours = chroma.scale(['blue', 'yellow', 'red']).colors(bins);
-        // generate whole list of values for colour ramp.
-        colourIndex=0
-        for(let i=startbin;i<endbin;i=i+bin){
-            colourRamp[i+" - "+(i+bin-1)]=gradColours[colourIndex]
-            colourIndex++;
+        } else {
+            // generate whole list of values for colour ramp.
+            gradColours = chroma.scale(['#5CFF92','#F7FF00','#F52727']).colors(numberBins); // Create an array of colour gradients.  This is from the chroma-js library.
+
         }
 
-        let keys = [];
+        colourIndex=0; // Set the colour index to zero
+        for(let i=startbin;i<endbin;i=i+bin){ // A for loop that steps across the bin interval increasing by the bin size
+            colourRamp[i+" - "+(i+bin-1)]=gradColours[colourIndex] // Add a bin label and its colour to the colour ramp
+            colourIndex++; // increase the colourIndex so the next colour in the list is used.
+        }
+
+        let keys = []; // Create an array to store the bin label keys from the colourRamp array.
         for (var key in colourRamp) {
             keys.push(key);
-}   
+        }   
 
-        console.log("colour ramp",colourRamp)
-        console.log(keys)
-        legenddata.push({label:keys[0],colour:gradColours[0]})
-        legenddata.push({label:"",colour:gradColours[Math.ceil(gradColours.length/2)]})
-        legenddata.push({label:keys[keys.length-1],colour:gradColours[gradColours.length-1]})
-        console.log(legenddata)
+        // Create the legend data
+        if (numberBins>5){  // if the number of bins total isn't enough to support a full colour bar, create a smaller one.
+            legenddata.push({label:keys[0],colour:gradColours[0]}) // Get the first depth label and colour
+            legenddata.push({label:"",colour:gradColours[Math.floor(gradColours.length*.25)]}) // get the approximate middle colour with no label
+            legenddata.push({label:"",colour:gradColours[Math.ceil(gradColours.length/2)]}) // get the approximate middle colour with no label
+            legenddata.push({label:"",colour:gradColours[Math.ceil(gradColours.length*.75)]}) // get the approximate middle colour with no label
+            legenddata.push({label:keys[keys.length-1],colour:gradColours[gradColours.length-1]}) // get end depth label and label
+        } else {
+            legenddata.push({label:keys[0],colour:gradColours[0]}) // Get the first depth label and colour
+            legenddata.push({label:"",colour:gradColours[Math.ceil(gradColours.length/2)]}) // get the approximate middle colour with no label
+            legenddata.push({label:keys[keys.length-1],colour:gradColours[gradColours.length-1]}) // get end depth label and label       
+        }
         return [colourRamp,wells,legenddata];
     }
 }
