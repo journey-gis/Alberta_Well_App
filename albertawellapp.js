@@ -107,7 +107,7 @@ function wellsperyear(){ // Function to update and render the two histograms (De
     
     console.log("Year Chart....") // debug
     Plotly.react('yearhist', [{
-        x:filtwells.map(well => well.Year),
+        x:filtwells.map(well => well.year),
         type:"histogram"
     }],layout,{responsive: true});
 
@@ -134,7 +134,7 @@ function filterWells(){
     console.log("Filtering "+ companyDropdown.value) //debug code
     let filtwells="";
     filtwells = wells.filter(well =>  // Filter our well array showing only relevant wells.
-        well.Year >= sliderstart.value && well.Year <= sliderend.value);
+        well.year >= sliderstart.value && well.year <= sliderend.value);
 
     if (companyDropdown.value!="Default" && companyDropdown.value!=""){
         filtwells = filtwells.filter(well =>  // Filter our well array showing only relevant wells.
@@ -182,11 +182,13 @@ function updateMarkers(){; // Function to update the well symbols as values are 
             let wellLocation = new L.LatLng(filtwells[i].LATITUDE, filtwells[i].LONGITUDE); 
             //console.log(filtwells[i].LATITUDE,filtwells[i].LONGITUDE); debug code
 
-            let info = "<div class=infowindow><b><h3>" + filtwells[i].Well_UWI + "</h3></b>"+
+            let info = "<div class=infowindow><b><h3>" + filtwells[i].Prod_String_UWI + "</h3></b>"+
                 "<b>Company:</b> " + filtwells[i].Licensee +     
                 "<br><b>Spud Date:</b> " + filtwells[i].Spud_Date + 
                 "<br><b>License Status:</b> " + filtwells[i].Licence_Status + 
                 "<br><b>Total Depth:</b> " + filtwells[i].Final_Total_Depth + "m"+
+                "<br><b>Producing:</b> " + filtwells[i].Status_Fluid
+                
                 "</p></div>";
             if(symbolization.value!="default"){
                 console.log("Not Default!")
@@ -337,6 +339,7 @@ areadropdown.addEventListener("change",function(event){  // Runs when the area d
         wells="";
     }
     getwellCentre(wells);
+    console.log(wells);
     if (wells==""){ // Checks to see if there is an active area.
         resetCompanyDropdown() // No active wells, reset the company dropdown
         markerLayer.clearLayers(); // Clear the current markerlayer
@@ -492,17 +495,20 @@ function getColourRamp(){
         }   
 
         // Create the legend data
-        if (numberBins>5){  // if the number of bins total isn't enough to support a full colour bar, create a smaller one.
+        if (numberBins>=5){  // if the number of bins total isn't enough to support a full colour bar, create a smaller one.
+            let binstep=numberBins/5; // Number of steps in the bins to fulfill 5 spots on the colour bar
+            numberBins=numberBins-1; // subtract one to convert value of bins to an index
             legenddata.push({label:keys[0],colour:gradColours[0]}) // Get the first depth label and colour
-            legenddata.push({label:"",colour:gradColours[Math.floor(gradColours.length*.25)]}) // get the approximate middle colour with no label
-            legenddata.push({label:"",colour:gradColours[Math.ceil(gradColours.length/2)]}) // get the approximate middle colour with no label
-            legenddata.push({label:"",colour:gradColours[Math.ceil(gradColours.length*.75)]}) // get the approximate middle colour with no label
-            legenddata.push({label:keys[keys.length-1],colour:gradColours[gradColours.length-1]}) // get end depth label and label
+            for (let i=binstep;i<(numberBins-(binstep));i=i+binstep){ // Increase a counter based on the bin step
+                legenddata.push({label:"",colour:gradColours[Math.round(i)]}); // Select a color and no label for the bin
+            }
+            legenddata.push({label:keys[numberBins],colour:gradColours[numberBins]}) // Get the last depth label and colour based on number of bins
         } else {
             legenddata.push({label:keys[0],colour:gradColours[0]}) // Get the first depth label and colour
             legenddata.push({label:"",colour:gradColours[Math.ceil(gradColours.length/2)]}) // get the approximate middle colour with no label
             legenddata.push({label:keys[keys.length-1],colour:gradColours[gradColours.length-1]}) // get end depth label and label       
         }
+        console.log(legenddata)
         return [colourRamp,wells,legenddata];
     }
 }
