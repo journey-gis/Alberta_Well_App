@@ -79,8 +79,29 @@ function wellsperyear(){ // Function to update and render the two histograms (De
             b: 40
         }
     };
-
     const layout2 = {
+        title: {
+            text: "Cumulative Wells Drilled"
+        },
+        xaxis: {
+            title: { text: "Year" },
+            dtick: 1,
+            automargin: true,
+            type: "linear"
+        },
+        yaxis: {
+            title: { text: "Well Count" },
+            rangemode: "tozero"
+        },
+        margin: {
+            l: 50,
+            r: 10,
+            t: 40,
+            b: 40
+        }
+    };
+
+    const layout3 = {
         title: {
             text: "Well Depth Distribution"
         },
@@ -104,12 +125,20 @@ function wellsperyear(){ // Function to update and render the two histograms (De
 
     let filtwells=filterWells();
     const depths = filtwells.map(well => Number(well.Final_Total_Depth));
+    const cumsum_wells=cumsum(filtwells,"year")
     
     console.log("Year Chart....") // debug
     Plotly.react('yearhist', [{
         x:filtwells.map(well => well.year),
         type:"histogram"
     }],layout,{responsive: true});
+
+    console.log("Cum Sum Chart");
+    Plotly.react('cumyearhist', [{
+        x:cumsum_wells.map(well => well.year),
+        y:cumsum_wells.map(well => well.sum),
+        type:"bar",
+    }],layout2,{responsive: true});
 
     console.log("Depth Chart....") // debug
     Plotly.react('depthhist', [{
@@ -118,9 +147,30 @@ function wellsperyear(){ // Function to update and render the two histograms (De
         xbins:{
             size:depthBin.value
         }
-    }],layout2,{responsive: true});
+    }],layout3,{responsive: true});
     console.log("Charts completed") // debug
 }
+
+function cumsum(object,column){ // Function to take in a javascript object and return a cumulative sum based on a column
+    console.log("=======Cum Sum========")
+    let result=[]; // Set results to a blank array
+    let sum=0; // Starting value for the sum
+    if(object.length>0){ // Make sure we are not passing in an empty object, if so do nothing
+        let wells=object.sort((a,b)=>a[column]-b[column]); // Imperative that the data is sorted so all like columns are together
+        let cat=wells[0][column]; // Get the first category
+        for (let i=0;i<wells.length;i++){ // Step across the object
+            newcat=wells[i][column] // Get the first category
+            if(cat!=newcat){ // if it isn't equal, then....
+                result.push({year:cat,sum:sum}) // Push the result and the last category into the results array
+                cat=newcat; // Set the category to the new category
+            } 
+            sum=sum+1;  // Add one to the sum
+        }
+        result.push({year:cat,sum:sum}) // Write the final set of values to the result
+    }
+    return result; // return either cum sum or nothing.
+}
+
 
 function filterWells(){
     console.log("===Filterwells===")  
@@ -167,7 +217,7 @@ function updateMarkers(){; // Function to update the well symbols as values are 
         const [symbols,legenddata]=assignColours(filtwells,5,"Licence_Status","discrete");
         symbolColours=symbols;
         console.log("symbolization: ",symbolColours);
-        colourField="License_Status"
+        colourField="Licence_Status"
     }
     else if (symbolization.value=="DEP"){
         const [symbols,depthWells]=getColourRamp();
