@@ -146,6 +146,18 @@ footer {
     height:auto;
 }
 
+.mapLabelTooltip{
+          font-size: 10px;
+                font-weight:bold;
+                padding: 0px;
+                background: none;
+                border: none;
+                color: rgb(0, 0, 0);
+                text-shadow: 0px 0px 10px rgb(255, 255, 255);
+                box-shadow: none;
+            outline: none;
+        }
+
 /* Style page content */
 .main {
 margin-left: 200px; /* Same as the width of the sidebar */

@@ -12,6 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 const map = L.map('wellMap'); //Create the global map object
 const markerLayer = L.layerGroup().addTo(map); // Add a grouplayer we can add and remove markers from.
+const textLayer = L.layerGroup().addTo(map); // Add a grouplayer we can add and remove markers from.
 
 // Set up the initial code to identify and set the year range sliders
 // Get the objects and store them as variables
@@ -43,15 +44,53 @@ function initializeMap(){     //Create the map object and set the centre point a
             fillOpacity:0
         }
     }).addTo(map);
+    const albertafields = L.geoJSON(fieldsAB,{
+        style:{
+            color:"black",
+            weight:1,
+            fillOpacity:0
+        }
+    }).addTo(map);
+
     // Set the text on the page to be the starting year values
     yearstart.innerHTML=sliderstart.value;
     yearend.innerHTML=sliderend.value;
     depthBinText.innerHTML=depthBin.value+"m";
-
+    labelMap(fieldsAB);
     wellsperyear(); // Update the histograms
     console.log("Map loaded!"); // debug
 }
+function labelMap(polys){
+    console.log("===========Labeling Area Map ==============")
+    let labelxy=[];
+    let labels=[];
 
+    polys.features.forEach((e)=>{
+        console.log("Feature")
+        labels.push(e.properties.FIELD_NAME)
+        let x=0;
+        let y=0;
+        let count=0;
+        e.geometry.coordinates.forEach((xy)=>{
+            let poly=xy.pop()
+            poly.forEach((pbound)=>{
+                x=x+pbound[0];
+                y=y+pbound[1];
+                count++;
+            })
+            avgx=x/count;
+            avgy=y/count;
+            labelxy.push([avgx,avgy])
+        })
+    })
+    //const labelxy=[ [ -119.16561325636091, 54.97735231586188 ], [ -116.86622640775148, 54.176664171121686 ], [ -110.93316518969523, 55.31329527585391 ], [ -110.42148067004456, 50.23805409834636 ], [ -114.94861045064745, 53.05113253193072 ], [ -111.07716582788797, 52.1609018773889 ], [ -119.80407611064156, 55.32571402661443 ] ]
+    for(let i=0;i<labelxy.length;i++){
+        let labelLocation = new L.LatLng(labelxy[i][1], labelxy[i][0]); 
+        let marker = new L.marker(labelLocation,{opacity:1,color:'#f50101'})
+        marker.bindTooltip(labels[i], {permanent: true, direction:'centre',offset: [-5, -10],className:'mapLabelTooltip'});
+        marker.addTo(textLayer);
+    }
+}
 function wellsperyear(){ // Function to update and render the two histograms (Depth and years)
     console.log("===Building Charts===") // debug
     if (wells.length<1){
@@ -123,9 +162,11 @@ function wellsperyear(){ // Function to update and render the two histograms (De
         }
     };
 
-    let filtwells=filterWells();
+    const filtwells=filterWells();
     const depths = filtwells.map(well => Number(well.Final_Total_Depth));
-    const cumsum_wells=cumsum(filtwells,"year")
+    const cumsum_wells=cumsum(filtwells,"year");
+    console.log(cumsum_wells);
+    //const years_size=new Set(filtwells.map(wells => wells.year)).size;
     
     console.log("Year Chart....") // debug
     Plotly.react('yearhist', [{
@@ -134,6 +175,7 @@ function wellsperyear(){ // Function to update and render the two histograms (De
     }],layout,{responsive: true});
 
     console.log("Cum Sum Chart");
+
     Plotly.react('cumyearhist', [{
         x:cumsum_wells.map(well => well.year),
         y:cumsum_wells.map(well => well.sum),
@@ -152,19 +194,21 @@ function wellsperyear(){ // Function to update and render the two histograms (De
 }
 
 function cumsum(object,column){ // Function to take in a javascript object and return a cumulative sum based on a column
-    console.log("=======Cum Sum========")
+    console.log("=======Cum Sum========");
+    console.log(object);
     let result=[]; // Set results to a blank array
     let sum=0; // Starting value for the sum
     if(object.length>0){ // Make sure we are not passing in an empty object, if so do nothing
         let wells=object.sort((a,b)=>a[column]-b[column]); // Imperative that the data is sorted so all like columns are together
         let cat=wells[0][column]; // Get the first category
+        console.log(cat)
         for (let i=0;i<wells.length;i++){ // Step across the object
             newcat=wells[i][column] // Get the first category
             if(cat!=newcat){ // if it isn't equal, then....
                 result.push({year:cat,sum:sum}) // Push the result and the last category into the results array
                 cat=newcat; // Set the category to the new category
             } 
-            sum=sum+1;  // Add one to the sum
+            sum++;  // Add one to the sum
         }
         result.push({year:cat,sum:sum}) // Write the final set of values to the result
     }
@@ -198,6 +242,7 @@ function filterWells(){
 function updateMarkers(){; // Function to update the well symbols as values are updates (Sliders, symbology)
     console.log("===updateMarkers===")
     markerLayer.clearLayers(); // Clear the current markerlayer
+    textLayer.clearLayers();
 
     let filtwells=filterWells(); // Get the filtered well set
     //console.log("filtered company ", filteredwells) //debug code
@@ -393,6 +438,7 @@ areadropdown.addEventListener("change",function(event){  // Runs when the area d
     if (wells==""){ // Checks to see if there is an active area.
         resetCompanyDropdown() // No active wells, reset the company dropdown
         markerLayer.clearLayers(); // Clear the current markerlayer
+        labelMap(fieldsAB);
     } else {
         // Active wells, update the markers to reflect these
         updateCompanyDropdown(); // Update the company dropdown.
