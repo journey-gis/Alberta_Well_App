@@ -61,28 +61,27 @@ function initializeMap(){     //Create the map object and set the centre point a
     console.log("Map loaded!"); // debug
 }
 function labelMap(polys){
-    console.log("===========Labeling Area Map ==============")
+    console.log("===========Labeling Area Map ==============");
+    console.log(polys);
     let labelxy=[];
     let labels=[];
+    let x=0;
+    let y=0;
+    let count=0;
 
-    polys.features.forEach((e)=>{
-        console.log("Feature")
+    polys.features.forEach((e) => {
         labels.push(e.properties.FIELD_NAME)
-        let x=0;
-        let y=0;
-        let count=0;
-        e.geometry.coordinates.forEach((xy)=>{
-            let poly=xy.pop()
-            poly.forEach((pbound)=>{
-                x=x+pbound[0];
-                y=y+pbound[1];
-                count++;
-            })
-            avgx=x/count;
-            avgy=y/count;
-            labelxy.push([avgx,avgy])
+        e.geometry.coordinates[0][0].forEach((xy)=>{
+            x=x+xy[0];
+            y=y+xy[1];
+            count++;
         })
-    })
+        avgx=x/count;
+        avgy=y/count;
+        labelxy.push([avgx,avgy])
+        })
+
+
     //const labelxy=[ [ -119.16561325636091, 54.97735231586188 ], [ -116.86622640775148, 54.176664171121686 ], [ -110.93316518969523, 55.31329527585391 ], [ -110.42148067004456, 50.23805409834636 ], [ -114.94861045064745, 53.05113253193072 ], [ -111.07716582788797, 52.1609018773889 ], [ -119.80407611064156, 55.32571402661443 ] ]
     for(let i=0;i<labelxy.length;i++){
         let labelLocation = new L.LatLng(labelxy[i][1], labelxy[i][0]); 
@@ -91,6 +90,7 @@ function labelMap(polys){
         marker.addTo(textLayer);
     }
 }
+
 function wellsperyear(){ // Function to update and render the two histograms (Depth and years)
     console.log("===Building Charts===") // debug
     if (wells.length<1){
