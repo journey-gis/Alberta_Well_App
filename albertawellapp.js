@@ -70,6 +70,9 @@ function labelMap(polys){
     let count=0;
 
     polys.features.forEach((e) => {
+        x=0;
+        y=0;
+        count=0;
         labels.push(e.properties.FIELD_NAME)
         e.geometry.coordinates[0][0].forEach((xy)=>{
             x=x+xy[0];
