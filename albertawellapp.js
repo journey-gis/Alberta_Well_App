@@ -60,37 +60,39 @@ function initializeMap(){     //Create the map object and set the centre point a
     wellsperyear(); // Update the histograms
     console.log("Map loaded!"); // debug
 }
-function labelMap(polys){
+
+function labelMap(polys){  // function to take a series of geojson polygons and label them.
     console.log("===========Labeling Area Map ==============");
     console.log(polys);
-    let labelxy=[];
-    let labels=[];
-    let x=0;
-    let y=0;
-    let count=0;
+    // set up iniital variables for use in the function.
+    let labelxy=[];  // array to store xy values of the labels
+    let labels=[]; // array to hold the labels
+    let x=0; // x variable to summ all the x vaues of the geojson
+    let y=0; // y variable to sum all the y values of the geojson
+    let count=0;// vairable to count the number of coordinats in a polygon
 
-    polys.features.forEach((e) => {
+    polys.features.forEach((e) => {  // step across each of the features
+        // reset the variables for each feature
         x=0;
         y=0;
         count=0;
-        labels.push(e.properties.FIELD_NAME)
-        e.geometry.coordinates[0][0].forEach((xy)=>{
-            x=x+xy[0];
-            y=y+xy[1];
-            count++;
+        labels.push(e.properties.FIELD_NAME) // Add the lebel for the feature
+        e.geometry.coordinates[0][0].forEach((xy)=>{ // step across each of the coordinate pairs in the polygon
+            x=x+xy[0]; // read the X value andd add it to our tally
+            y=y+xy[1]; // ready the y value and add it to our tally
+            count++; // add 1 to the count.
         })
-        avgx=x/count;
-        avgy=y/count;
-        labelxy.push([avgx,avgy])
+        avgx=x/count; // determine the x avg of all the cooridnate pairs
+        avgy=y/count; // dtermine the y avg of all the coordinate pairs
+        labelxy.push([avgx,avgy]) // push the cooridnate to the label xy array
         })
 
 
     //const labelxy=[ [ -119.16561325636091, 54.97735231586188 ], [ -116.86622640775148, 54.176664171121686 ], [ -110.93316518969523, 55.31329527585391 ], [ -110.42148067004456, 50.23805409834636 ], [ -114.94861045064745, 53.05113253193072 ], [ -111.07716582788797, 52.1609018773889 ], [ -119.80407611064156, 55.32571402661443 ] ]
-    for(let i=0;i<labelxy.length;i++){
-        let labelLocation = new L.LatLng(labelxy[i][1], labelxy[i][0]); 
-        let marker = new L.marker(labelLocation,{opacity:1,color:'#f50101'})
-        marker.bindTooltip(labels[i], {permanent: true, direction:'centre',offset: [-5, -10],className:'mapLabelTooltip'});
-        marker.addTo(textLayer);
+    for(let i=0;i<labelxy.length;i++){   // step across the labek xy array.
+        let labelLocation = new L.LatLng(labelxy[i][1], labelxy[i][0]); // convert the xy into a lebel location for leaflet
+        let marker = new L.marker(labelLocation,{opacity:1,color:'#f50101'}) // create a new marker at the new loation
+        marker.bindTooltip(labels[i], {permanent: true, direction:'centre',offset: [-5, -10],className:'mapLabelTooltip'}).addTo(textLayer);; // add the marker to a text layer and set the tooltip to display permanently with the label name.
     }
 }
 
@@ -283,6 +285,7 @@ function updateMarkers(){; // Function to update the well symbols as values are 
             let info = "<div class=infowindow><b><h3>" + filtwells[i].Prod_String_UWI + "</h3></b>"+
                 "<b>Company:</b> " + filtwells[i].Licensee +     
                 "<br><b>Spud Date:</b> " + filtwells[i].Spud_Date + 
+                "<br><b>Final Drill Date:</b> " + filtwells[i].Final_Drill_Date +   
                 "<br><b>License Status:</b> " + filtwells[i].Licence_Status + 
                 "<br><b>Total Depth:</b> " + filtwells[i].Final_Total_Depth + "m"+
                 "<br><b>Producing:</b> " + filtwells[i].Status_Fluid
