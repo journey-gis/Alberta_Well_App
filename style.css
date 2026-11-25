@@ -36,7 +36,14 @@ footer {
     grid-template-columns: 220px 1.2fr 1fr;
     gap: 20px;
     height: 700px;
+}
 
+#infotext {
+    text-align: center;
+    padding-left: 150px;
+    padding-right: 150px;
+    padding-top: 20px;
+    font-size: larger;
 }
 
 #wellMap{
